@@ -1,3 +1,36 @@
 <div ng-controller="homeController">
-  home
+  <div class="row">
+    <div class="col-lg-6 col-md-6 col-sm-6">
+      <h4>Menu</h4>
+      <button ng-click="home.merge()">Merge</button>
+      <hr />
+      <div class="row">
+        <div class="time-scale col-lg-3 col-md-3 col-sm-3">
+          <div class="notch" ng-repeat="time in home.timeScale | orderBy:reverse">
+            <span class="value">{{time | date: 'hh:mm'}}</span>
+            <hr />
+          </div>
+        </div>
+        <div ng-style="{'height': home.notches*20 + 'px'}" class="method col-lg-8 col-md-8 col-sm-8">
+          <div ng-style="{'height': step.duration * 4 + 'px', 'bottom': step.offset*4 + 'px'}" class="step{{{true: ' parallel'}[step.parallel]}}" ng-class="{'one': step.recipe == 0, 'two': step.recipe == 1,'three': step.recipe == 2}"  ng-repeat="step in home.menu">
+            <span>#{{step.recipe + 1}} {{step.description}}</span>
+            <i class="fa fa-clock-o" ng-if="step.parallel"></i>
+            <span class="badge pull-right">{{step.duration}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row col-lg-6 col-md-6 col-sm-6">
+      <div class="col-lg-4 col-md-4 col-sm-4 recipe" ng-class="{'one': $index == 0, 'two': $index == 1,'three': $index == 2}" ng-if="recipe.name.length > 0" ng-repeat="recipe in $root.data track by $index">
+        <h4>{{recipe.name}}</h4>
+        <div uib-timepicker ng-model="recipe.finishTime" ng-change="home.merge()" hour-step="1" minute-step="5" show-meridian="true" show-spinners="false" pad-hours="false"></div>
+        <hr />
+        <div ng-style="{'height': step.duration * 4 + 'px'}" class="step" ng-repeat="step in recipe.steps">
+          <span>{{step.description}}</span>
+          <i class="fa fa-clock-o" ng-if="step.parallel"></i>
+          <span class="badge pull-right">{{step.duration}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

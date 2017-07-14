@@ -25,22 +25,18 @@ angular.module('recipeMerger', [
 	})
 
 	.controller('rootController', function($scope, $rootScope, $state, $location, $resource, $q, $timeout, $interval, $window, recipes, findInArray, guid) {
-    recipes.fromFile(0);
+    $rootScope.data = [];
 
-		$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
+		$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){});
 
-		});
-
-		$rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
-
-		});
+		$rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){});
 	})
 
 	.factory('recipes', function ($rootScope, $q, $resource, $window){
 		return {
       fromFile: function(recipeId){
         this.resource(recipeId).then(function(success){
-          console.log('recipes.fromFile', success);
+          $rootScope.data[recipeId-1] = success;
         },function(error){
           console.log('recipes.fromFile', error);
         });

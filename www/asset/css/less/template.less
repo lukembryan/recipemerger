@@ -1,0 +1,84 @@
+body {
+  color: #333;
+}
+
+.time-scale {
+  margin-top: -10px;
+  .notch {
+    .value {
+      background-color: white;
+      padding-right: 10px;
+    }
+    hr {
+      float: right;
+      width: 100%;
+      height: 1px;
+      margin: -10px;
+      border-top-color: #999;
+    }
+  }
+}
+
+.recipe {
+  &.one {
+    .step {
+      color: blue;
+      background-color: lighten(blue, 40%);
+    }
+  }
+  &.two {
+    .step {
+      color: red;
+      background-color: lighten(red, 40%);
+    }
+  }
+  &.three {
+    .step {
+      color: green;
+      background-color: lighten(green, 50%);
+    }
+  }
+}
+
+.step {
+  border-bottom: 1px solid #999;
+  font-size: 0.8em;
+  &.one {
+    color: blue;
+    background-color: lighten(blue, 40%);
+  }
+  &.two {
+    color: red;
+    background-color: lighten(red, 40%);
+  }
+  &.three {
+    color: green;
+    background-color: lighten(green, 50%);
+  }
+  &.parallel {
+    right: 0;
+  }
+  .badge {
+    border-radius: 0;
+  }
+}
+
+.method {
+  position: relative;
+  > div {
+    position: absolute;
+    width: 45%;
+  }
+}
+
+.uib-time {
+  input, button {
+    height: 30px;
+    width: 30px;
+    padding: 3px 5px;
+    border-radius: 0;
+  }
+  button {
+    width: auto;
+  }
+}
