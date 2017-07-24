@@ -7,15 +7,25 @@ angular.module('recipeMerger')
 				menuStart: null,
 				menuFinish: null,
 				timeScale: [],
+				stepFinishes: [],
+				recipeFinishes: [],
 				notches: 0,
 				merge: function(){
 					this.menu = [];
-					this.timeScale = [];
 
-					angular.forEach($rootScope.data, function(recipe){
+					var mostSteps = 0;
+					this.stepFinishes = [];
+
+					angular.forEach($rootScope.data, function(recipe, recipeNumber){
 						var minute = 5 * Math.round(moment(recipe.finishTime).minute()/5);
 						recipe.finishTime = moment(recipe.finishTime).set({'minute': minute});
+
+						if(recipe.steps.length > mostSteps) mostSteps = recipe.steps.length;
+
+						$scope.home.stepFinishes[recipeNumber] = angular.copy(recipe.finishTime);
 					});
+
+					this.recipeFinishes = angular.copy(this.stepFinishes);
 
 					var recipes = angular.copy($rootScope.data);
 
@@ -23,25 +33,40 @@ angular.module('recipeMerger')
 
 					this.menuFinish = moment(recipes[0].finishTime);
 
-					angular.forEach($rootScope.data, function(recipe, recipeNumber){
-						var stepFinish = moment(angular.copy(recipe.finishTime));
-						var steps = angular.copy(recipe.steps).reverse();
+					for(var i=0; i<mostSteps; i++){
+						angular.forEach($rootScope.data, function(recipe, recipeNumber){
+							var steps = angular.copy(recipe.steps).reverse();
 
-						angular.forEach(steps, function(step, stepNumber){
-							step.recipe = recipeNumber;
-							step.number = steps.length - stepNumber - 1;
+							if(steps[i]){
+								steps[i].recipe = recipeNumber;
+								steps[i].number = steps.length - i - 1;
 
-							$scope.home.setStepTime(step, stepFinish);
+								//console.log(i, steps[i].description);
 
-							//console.log(step.recipe, step.number, step.parallel, step.follow, step.startTime.format('hh:mm'), step.finishTime.format('hh:mm'), step.offset);
+								var shift = 0;
 
-							$scope.home.menu.push(step);
+								if(steps[i].wait && steps[i].overlap){
+									//console.log((steps[i].recipe + 1) + ' - ' + (steps[i].number + 1) + ' wait, overlap: ' + steps[i].overlap);
+									angular.forEach(steps[i].overlap, function(overlapStep){
+										//console.log(i, overlapStep, steps.length - overlapStep - 1);
+										overlapStep = steps.length - overlapStep - 1;
+										shift += steps[overlapStep].duration;
+									});
+									//console.log('shift', shift);
+								}
 
-							stepFinish.subtract(step.duration, 'minutes');
+								$scope.home.setStepTime(steps[i], $scope.home.stepFinishes[recipeNumber].add(shift, 'minutes'));
+
+								var stepIndex = $scope.home.menu.push(steps[i]) - 1;
+
+								$scope.home.stepFinishes[recipeNumber].subtract(steps[i].duration, 'minutes');
+								$scope.home.checkOverlaps(stepIndex, steps[i]);
+							}
 						});
-					});
-
-					this.checkOverlaps();
+					}
+				},
+				stepFinishOffset: function(finish){
+					return moment($scope.home.menuFinish).diff(finish, 'minutes') - 5;
 				},
 				setStepTime: function(step, stepFinish){
 					step.startTime = angular.copy(stepFinish).subtract(step.duration, 'minutes');
@@ -49,6 +74,7 @@ angular.module('recipeMerger')
 					step.offset = moment($scope.home.menuFinish).diff(step.finishTime, 'minutes');
 				},
 				setupTimeScale: function(){
+					this.timeScale = [];
 					var menu = angular.copy(this.menu);
 
 					menu.sort(function(a ,b){ return new Date(a.startTime) - new Date(b.startTime); });
@@ -61,29 +87,37 @@ angular.module('recipeMerger')
 						this.timeScale.push(newNotch.subtract(5*i, 'minutes').format());
 					}
 				},
-				checkOverlaps: function(){
-					angular.forEach($scope.home.menu, function(step, stepNumber){
-						angular.forEach($scope.home.menu, function(stepCheck, stepCheckNumber){
-							if(stepNumber !== stepCheckNumber){
-								var startOverlap = moment(step.startTime).isBetween(stepCheck.startTime, stepCheck.finishTime, 'minute', '[)');
-								var finishOverlap = moment(step.finishTime).isBetween(stepCheck.startTime, stepCheck.finishTime, 'minute', '(]');
-								var stepTime = (step.recipe + 1) + '|' + (step.number + 1);
-								var checkRange = (stepCheck.recipe + 1) + '|' + (stepCheck.number + 1);
+				checkOverlaps: function(stepIndex, stepToCheck){
+					var recipeCount = $rootScope.data.length;
 
-								if(startOverlap || finishOverlap){
-									//if(startOverlap) console.log(stepTime, 'startTime:' + step.startTime.format('hh:mm'), checkRange, 'range:' + stepCheck.startTime.format('hh:mm') + '-' + stepCheck.finishTime.format('hh:mm'));
-									//if(finishOverlap) console.log(stepTime, 'finishTime:' + step.finishTime.format('hh:mm'), checkRange, 'range:' + stepCheck.startTime.format('hh:mm') + '-' + stepCheck.finishTime.format('hh:mm'));
-									$scope.home.setStepTime(step, stepCheck.startTime);
+					for(var i=0; i<recipeCount; i++){
+						angular.forEach($scope.home.menu, function(step, stepNumber){
+							if(stepIndex !== stepNumber){
+								var startOverlap = moment(stepToCheck.startTime).isBetween(step.startTime, step.finishTime, 'minute', '[)');
+								var finishOverlap = moment(stepToCheck.finishTime).isBetween(step.startTime, step.finishTime, 'minute', '(]');
+								var allOverlap = moment(stepToCheck.startTime).isSameOrBefore(step.startTime) && moment(stepToCheck.finishTime).isSameOrAfter(step.finishTime);
+
+								var stepTime = (stepToCheck.recipe + 1) + '|' + (stepToCheck.number + 1);
+								var checkRange = (step.recipe + 1) + '|' + (step.number + 1);
+
+								if(startOverlap || finishOverlap || allOverlap){
+									if(!stepToCheck.wait || (stepToCheck.wait && step.wait)){
+										//console.log(stepTime, stepToCheck.startTime.format('hh:mm'), stepToCheck.finishTime.format('hh:mm'), ' - ', checkRange, step.startTime.format('hh:mm'), step.finishTime.format('hh:mm'));
+										$scope.home.setStepTime(stepToCheck, step.startTime);
+										//console.log('new range', stepToCheck.startTime.format('hh:mm'), stepToCheck.finishTime.format('hh:mm'));
+										//console.log('--------');
+										//$scope.home.stepFinishes[stepToCheck.recipe] = angular.copy(step.startTime).subtract(stepToCheck.duration, 'minutes');
+									}
 								}
 							}
 						});
-					});
+					}
 
 					this.setupTimeScale();
 				}
 			};
 
-	    //recipes.fromFile(1);
+	    recipes.fromFile(1);
 	    recipes.fromFile(2);
 	    recipes.fromFile(3);
 	});

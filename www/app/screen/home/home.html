@@ -12,10 +12,14 @@
           </div>
         </div>
         <div ng-style="{'height': home.notches*20 + 'px'}" class="method col-lg-8 col-md-8 col-sm-8">
-          <div ng-style="{'height': step.duration * 4 + 'px', 'bottom': step.offset*4 + 'px'}" class="step{{{true: ' parallel'}[step.parallel]}}" ng-class="{'one': step.recipe == 0, 'two': step.recipe == 1,'three': step.recipe == 2}"  ng-repeat="step in home.menu">
+          <div ng-style="{'height': step.duration * 4 + 'px', 'bottom': step.offset*4 + 'px'}" class="step{{{true: ' wait'}[step.wait]}}" ng-class="{'one': step.recipe == 0, 'two': step.recipe == 1,'three': step.recipe == 2}"  ng-repeat="step in home.menu">
             <span>#{{step.recipe + 1}} {{step.description}}</span>
-            <i class="fa fa-clock-o" ng-if="step.parallel"></i>
+            <i class="fa fa-clock-o" ng-if="step.wait"></i>
             <span class="badge pull-right">{{step.duration}}</span>
+          </div>
+          <div ng-style="{'bottom':  home.stepFinishOffset(finish)*4 + 'px'}" class="finish" ng-repeat="finish in home.recipeFinishes">
+            <span class="badge">{{$index + 1}}</span>
+            <hr />
           </div>
         </div>
       </div>
@@ -27,7 +31,7 @@
         <hr />
         <div ng-style="{'height': step.duration * 4 + 'px'}" class="step" ng-repeat="step in recipe.steps">
           <span>{{step.description}}</span>
-          <i class="fa fa-clock-o" ng-if="step.parallel"></i>
+          <i class="fa fa-clock-o" ng-if="step.wait"></i>
           <span class="badge pull-right">{{step.duration}}</span>
         </div>
       </div>

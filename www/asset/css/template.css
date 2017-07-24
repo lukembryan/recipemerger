@@ -6,7 +6,7 @@ body {
 }
 .time-scale .notch .value {
   background-color: white;
-  padding-right: 10px;
+  padding-right: 5px;
 }
 .time-scale .notch hr {
   float: right;
@@ -28,7 +28,6 @@ body {
   background-color: #80ff80;
 }
 .step {
-  border-bottom: 1px solid #999;
   font-size: 0.8em;
 }
 .step.one {
@@ -43,10 +42,10 @@ body {
   color: green;
   background-color: #80ff80;
 }
-.step.parallel {
+.step.wait {
   right: 0;
 }
-.step .badge {
+.badge {
   border-radius: 0;
 }
 .method {
@@ -55,6 +54,21 @@ body {
 .method > div {
   position: absolute;
   width: 45%;
+}
+.method .finish {
+  position: absolute;
+  left: 0;
+  width: 100%;
+}
+.method .finish .badge {
+  position: absolute;
+  bottom: 12px;
+  left: -12px;
+  background-color: #333;
+}
+.method .finish hr {
+  border-top: 1px solid red;
+  width: 100%;
 }
 .uib-time input,
 .uib-time button {

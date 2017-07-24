@@ -7,7 +7,7 @@ body {
   .notch {
     .value {
       background-color: white;
-      padding-right: 10px;
+      padding-right: 5px;
     }
     hr {
       float: right;
@@ -41,7 +41,6 @@ body {
 }
 
 .step {
-  border-bottom: 1px solid #999;
   font-size: 0.8em;
   &.one {
     color: blue;
@@ -55,12 +54,13 @@ body {
     color: green;
     background-color: lighten(green, 50%);
   }
-  &.parallel {
+  &.wait {
     right: 0;
   }
-  .badge {
-    border-radius: 0;
-  }
+}
+
+.badge {
+  border-radius: 0;
 }
 
 .method {
@@ -68,6 +68,21 @@ body {
   > div {
     position: absolute;
     width: 45%;
+  }
+  .finish {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    .badge {
+      position: absolute;
+      bottom: 12px;
+      left: -12px;
+      background-color: #333;
+    }
+    hr {
+      border-top: 1px solid red;
+      width: 100%;
+    }
   }
 }
 
