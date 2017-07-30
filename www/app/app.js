@@ -14,6 +14,7 @@ angular.module('recipeMerger', [
 
 		$stateProvider
 			.state('home', 			    {url: '/', 									       templateUrl: 'app/screen/home/home.html'})
+			.state('demo', 			    {url: '/demo', 									       templateUrl: 'app/screen/demo/demo.html'});
 
     $locationProvider.html5Mode(true);
 	})
@@ -27,16 +28,31 @@ angular.module('recipeMerger', [
 	.controller('rootController', function($scope, $rootScope, $state, $location, $resource, $q, $timeout, $interval, $window, recipes, findInArray, guid) {
     $rootScope.data = [];
 
+    console.log(guid());
+
 		$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){});
 
 		$rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){});
 	})
 
+  .directive('currentStep', function($rootScope, $timeout) {
+    return {
+      restrict: 'A',
+      link: function(scope, element) {
+        $rootScope.adjustHeight = function(){
+          $timeout(function(){
+            $rootScope.currentStepHeight = element[0].clientHeight + 20;
+          }, 0);
+        };
+      }
+    };
+  })
+
 	.factory('recipes', function ($rootScope, $q, $resource, $window){
 		return {
       fromFile: function(recipeId){
         this.resource(recipeId).then(function(success){
-          $rootScope.data[recipeId-1] = success;
+          $rootScope.data.push(success);
         },function(error){
           console.log('recipes.fromFile', error);
         });

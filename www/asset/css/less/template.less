@@ -2,87 +2,76 @@ body {
   color: #333;
 }
 
-.time-scale {
-  margin-top: -10px;
-  .notch {
-    .value {
-      background-color: white;
-      padding-right: 5px;
-    }
-    hr {
-      float: right;
-      width: 100%;
-      height: 1px;
-      margin: -10px;
-      border-top-color: #999;
-    }
+header {
+  margin-bottom: 20px;
+  .time-picker {
+    display: inline-block;
+    vertical-align: bottom;
+  }
+}
+
+section {
+
+}
+
+.row {
+  position: relative;
+}
+
+.current-step {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1;
+  .description {
+    padding: 20px 0;
+    background-color: #ccc;
   }
 }
 
 .recipe {
-  &.one {
+  display: inline-block;
+  vertical-align: top;
+  .method {
+    position: relative;
+    margin-top: 20px;
     .step {
-      color: blue;
-      background-color: lighten(blue, 40%);
-    }
-  }
-  &.two {
-    .step {
-      color: red;
-      background-color: lighten(red, 40%);
-    }
-  }
-  &.three {
-    .step {
-      color: green;
-      background-color: lighten(green, 50%);
-    }
-  }
-}
-
-.step {
-  font-size: 0.8em;
-  &.one {
-    color: blue;
-    background-color: lighten(blue, 40%);
-  }
-  &.two {
-    color: red;
-    background-color: lighten(red, 40%);
-  }
-  &.three {
-    color: green;
-    background-color: lighten(green, 50%);
-  }
-  &.wait {
-    right: 0;
-  }
-}
-
-.badge {
-  border-radius: 0;
-}
-
-.method {
-  position: relative;
-  > div {
-    position: absolute;
-    width: 45%;
-  }
-  .finish {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    .badge {
       position: absolute;
-      bottom: 12px;
-      left: -12px;
-      background-color: #333;
+      font-size: 0.8em;
+      background-color: #e7e7e7;
+      width: 50%;
+      -webkit-box-shadow: inset 0 0 1px 0 #333;
+      box-shadow: inset 0 0 1px 0 #333;
+      &.unmerged {
+        position: relative;
+      }
+      &.wait {
+        right: 0;
+      }
+      &.active {
+        background-color: lighten(blue, 30%);
+      }
     }
-    hr {
-      border-top: 1px solid red;
-      width: 100%;
-    }
+  }
+}
+
+.time-marker {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  border-top: 1px solid red;
+  z-index: 1;
+  > span {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 80px;
+    margin-left: -40px;
+    padding: 3px 5px;
+    background: #ccc;
+    text-align: center;
+    box-sizing: border-box;
   }
 }
 
@@ -96,4 +85,8 @@ body {
   button {
     width: auto;
   }
+}
+
+.uib-timepicker {
+  // margin: 0 auto;
 }

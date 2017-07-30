@@ -1,0 +1,30 @@
+{
+  "id": "",
+  "name": "",
+  "description": "",
+  "image": "",
+  "category": "",
+  "serves": 0,
+  "source": {
+    "name": "",
+    "url": "",
+    "reference": ""
+  },
+  "ingredients": {
+    "all": [
+      {
+        "description": "",
+        "quantity": ""
+      }
+    ]
+  },
+  "steps": [
+    {
+      "description": "",
+      "duration": 0,
+      "parallel": false,
+      "overlap": null,
+      "precede": null
+    }
+  ]
+}
