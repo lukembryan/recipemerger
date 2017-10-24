@@ -1,145 +1,297 @@
 'use strict';
 
 angular.module('recipeMerger')
-	.controller('homeController', function($scope, $rootScope, $state, $timeout, recipes) {
-	    $scope.home = {
-				menu: [],
-				height: 4,
-				menuStart: null,
-				menuFinish: null,
-				recipeLength: 0,
-				elapsedTime: null,
-				currentSteps: null,
-				stepFinishes: [],
-				recipeFinishes: [],
-				merge: function(){
-					this.menu = [];
+	.controller('homeController', function($scope, $rootScope, $state, $timeout, recipes, findInArray) {
+    $scope.ctrl = {
+			recipes: [],
+			method: [],
+			scale: [],
+			scaleIncrement: 5,
+			minFinishTime: null,
+			init: function(){
+				this.setData();
+				this.merge();
+			},
+			merge: function(){
+				var ctrl = this, end = 0;
 
-					var mostSteps = 0;
-					this.stepFinishes = [];
+				var position = function(step, stepIndex, recipe){
+					step = ctrl.stepPosition(step, stepIndex, recipe);
+				};
 
-					angular.forEach($rootScope.data, function(recipe, recipeNumber){
-						var minute = 5 * Math.round(moment(recipe.finishTime).minute()/5);
-						recipe.finishTime = moment(recipe.finishTime).set({'minute': minute});
+				var stepEnd = function(step, stepIndex, recipe){
+					if(recipe.end === undefined) recipe.end = 0;
+					if(step.end > end) end = step.end;
+					if(end > recipe.end) recipe.end = end;
+				};
 
-						if(recipe.steps.length > mostSteps) mostSteps = recipe.steps.length;
+				var correctOffset = function(step, stepIndex, recipe){
+					if(stepIndex === 0) recipe.offset = end - recipe.end;
+					step.offset += recipe.offset;
+					step.position.top = step.offset*4 + 'px';
+				};
 
-						$scope.home.stepFinishes[recipeNumber] = angular.copy(recipe.finishTime);
+				var watchServingTimes = function(recipe, recipeIndex){
+					$scope.$watch('ctrl.recipes[' + recipeIndex + '].servingTime', function(now, was){
+						var offset = moment(now).diff(was, 'minute');
+						if(offset) moveRecipe(recipeIndex, offset);
+						ctrl.buildScale(true);
+						ctrl.setupMethod();
+					}, true);
+				};
+
+				function moveRecipe(recipeIndex, offset){
+					ctrl.recipes[recipeIndex].offset += offset;
+
+					angular.forEach(ctrl.recipes[recipeIndex].steps, function(step){
+						step.offset += offset;
+						step.position.top = step.offset*4 + 'px';
 					});
-
-					this.recipeFinishes = angular.copy(this.stepFinishes);
-
-					var recipes = angular.copy($rootScope.data);
-
-					recipes.sort(function(a ,b){ return new Date(b.finishTime) - new Date(a.finishTime); });
-
-					this.menuFinish = moment(recipes[0].finishTime);
-
-					for(var i=0; i<mostSteps; i++){
-						angular.forEach($rootScope.data, function(recipe, recipeNumber){
-							var steps = angular.copy(recipe.steps).reverse();
-
-							if(steps[i]){
-								steps[i].recipe = recipeNumber;
-								steps[i].number = steps.length - i - 1;
-								steps[i].category = recipe.category;
-
-								//console.log(i, steps[i].description);
-
-								var shift = 0;
-
-								if(steps[i].parallel && steps[i].overlap){
-									//console.log((steps[i].recipe + 1) + ' - ' + (steps[i].number + 1) + ' wait, overlap: ' + steps[i].overlap);
-									angular.forEach(steps[i].overlap, function(overlapStep){
-										//console.log(i, overlapStep, steps.length - overlapStep - 1);
-										overlapStep = steps.length - overlapStep - 1;
-										shift += steps[overlapStep].duration;
-									});
-									//console.log('shift', shift);
-								}
-
-								$scope.home.setStepTime(steps[i], $scope.home.stepFinishes[recipeNumber].add(shift, 'minutes'));
-
-								var stepIndex = $scope.home.menu.push(steps[i]) - 1;
-
-								$scope.home.stepFinishes[recipeNumber].subtract(steps[i].duration, 'minutes');
-								$scope.home.checkOverlaps(stepIndex, steps[i]);
-							}
-						});
-					}
-
-					this.calculateRecipeLength();
-					this.elapsedTime = moment(this.menuFinish).subtract(this.recipeLength, 'minutes').format();
-					this.moveTimeMarker();
-				},
-				stepFinishOffset: function(finish){
-					return moment($scope.home.menuFinish).diff(finish, 'minutes') - 5;
-				},
-				setStepTime: function(step, stepFinish){
-					step.startTime = angular.copy(stepFinish).subtract(step.duration, 'minutes');
-					step.finishTime = angular.copy(stepFinish);
-					step.offset = moment($scope.home.menuFinish).diff(step.finishTime, 'minutes');
-				},
-				formatTime: function(timeObject){
-					return timeObject.format();
-				},
-				checkOverlaps: function(stepIndex, stepToCheck){
-					var recipeCount = $rootScope.data.length;
-
-					for(var i=0; i<recipeCount; i++){
-						angular.forEach($scope.home.menu, function(step, stepNumber){
-							if(stepIndex !== stepNumber){
-								var startOverlap = moment(stepToCheck.startTime).isBetween(step.startTime, step.finishTime, 'minute', '[)');
-								var finishOverlap = moment(stepToCheck.finishTime).isBetween(step.startTime, step.finishTime, 'minute', '(]');
-								var allOverlap = moment(stepToCheck.startTime).isSameOrBefore(step.startTime) && moment(stepToCheck.finishTime).isSameOrAfter(step.finishTime);
-
-								var stepTime = (stepToCheck.recipe + 1) + '|' + (stepToCheck.number + 1);
-								var checkRange = (step.recipe + 1) + '|' + (step.number + 1);
-
-								if(startOverlap || finishOverlap || allOverlap){
-									if(!stepToCheck.parallel || (stepToCheck.parallel && step.parallel)){
-										//console.log(stepTime, stepToCheck.startTime.format('hh:mm'), stepToCheck.finishTime.format('hh:mm'), ' - ', checkRange, step.startTime.format('hh:mm'), step.finishTime.format('hh:mm'));
-										$scope.home.setStepTime(stepToCheck, step.startTime);
-										//console.log('new range', stepToCheck.startTime.format('hh:mm'), stepToCheck.finishTime.format('hh:mm'));
-										//console.log('--------');
-										//$scope.home.stepFinishes[stepToCheck.recipe] = angular.copy(step.startTime).subtract(stepToCheck.duration, 'minutes');
-									}
-								}
-							}
-						});
-					}
-				},
-				calculateRecipeLength: function(){
-					var menu = angular.copy(this.menu);
-
-					menu.sort(function(a ,b){ return new Date(a.startTime) - new Date(b.startTime); });
-
-					this.menuStart = menu[0].finishTime.subtract(menu[0].duration, 'minutes');
-					this.recipeLength = this.menuFinish.diff(this.menuStart, 'minutes');
-				},
-				moveTimeMarker: function(){
-					var elapsedTime = moment(angular.copy(this.elapsedTime));
-					this.elapsedTimePosition = this.menuFinish.diff(elapsedTime, 'minutes');
-
-					var currentSteps = [];
-
-					angular.forEach(this.menu, function(step){
-						step.active = moment(elapsedTime).isBetween(step.startTime, step.finishTime, 'minute', '[)');
-						if(step.active) currentSteps.push(step);
-					});
-
-					this.currentSteps = currentSteps;
-
-					$rootScope.adjustHeight();
-				},
-				stepClass: function(step){
-					var classList = '';
-					if(step.parallel) classList += ' wait';
-					if(step.active) classList += ' active';
-					return classList;
 				}
-			};
 
-	    recipes.fromFile('99eee451-7887-7a7a-424d-c0c5be756021');
-	    recipes.fromFile('f1d2e24a-d4d7-48e6-9211-2793aed6cb10');
+				ctrl.processRecipe(function(step, stepIndex, recipe, recipeIndex){
+					step.index = stepIndex;
+					step.recipe = recipeIndex;
+				});
+
+				ctrl.processRecipe(position);
+				ctrl.processRecipe(stepEnd);
+				ctrl.processRecipe(correctOffset);
+				ctrl.processRecipe(null, watchServingTimes);
+
+				ctrl.buildScale();
+				ctrl.setupMethod();
+			},
+			setupMethod: function(){
+				var ctrl = this;
+
+				ctrl.method = [];
+
+				var compileMethod = function(step, stepIndex, recipe, recipeIndex){
+					var adjustedStep = angular.copy(step);
+					adjustedStep.end += recipe.offset;
+					ctrl.method.push(adjustedStep);
+				};
+
+
+				ctrl.processRecipe(compileMethod);
+
+				ctrl.method.sort(function(a ,b){ return new Date(b.end) - new Date(a.end); });
+			},
+			fixOverlaps: function(){
+				var ctrl = this;
+				var overlapFound = null, overlaps = [];
+
+				angular.forEach(ctrl.method, function(methodStep){
+					angular.forEach(ctrl.recipes, function(recipe, recipeIndex){
+						for(var stepIndex = recipe.steps.length - 1; stepIndex >= 0; stepIndex--){
+							var step = recipe.steps[stepIndex];
+
+							var ends = calculateEnds(step, methodStep, recipe);
+
+							var recipeAdded = findInArray(overlaps, 'recipe', step.recipe) !== null;
+
+							//var test = (recipeIndex+1) + '-' + (stepIndex+1) + ' ~ ' + (methodStep.recipe+1) + '-' + (methodStep.index+1) + ' | ' + ends.step.start + '-' + ends.step.finish + ' ~ ' + ends.methodStep.start + '-' + ends.methodStep.finish;
+							//console.log(test);
+
+							if(recipeIndex !== methodStep.recipe){
+								if(overlapFound === null || (overlapFound.index === methodStep.index && overlapFound.recipe === methodStep.recipe)){
+									checkStart();
+									checkEnd();
+								}
+							}
+
+							function checkStart(){
+								if(ends.step.start >= ends.methodStep.start && ends.step.start < ends.methodStep.finish){
+									//var startOverlap = (recipeIndex+1) + '-' + (stepIndex+1) + ' ~start overlap~ ' + (methodStep.recipe+1) + '-' + (methodStep.index+1);
+									//console.log(startOverlap);
+									overlapFound = methodStep;
+									if(overlaps.indexOf(step) < 0 && !recipeAdded) overlaps.push(step);
+								}
+							}
+
+							function checkEnd(){
+								if(ends.step.finish <= ends.methodStep.finish && ends.step.finish > ends.methodStep.start){
+									//var endOverlap = (recipeIndex+1) + '-' + (stepIndex+1) + ' ~end overlap~ ' + (methodStep.recipe+1) + '-' + (methodStep.index+1);
+									//console.log(endOverlap);
+									overlapFound = methodStep;
+									if(overlaps.indexOf(step) < 0 && !recipeAdded) overlaps.push(step);
+								}
+							}
+						}
+					});
+				});
+
+				function calculateEnds(step, methodStep, recipe){
+					var ends = {
+						step: {
+							duration: step.duration,
+							start: 0,
+							finish: step.end + recipe.offset
+						},
+						methodStep: {
+							duration: methodStep.duration,
+							start: 0,
+							finish: methodStep.end
+						}
+					};
+
+					if(step.parallel) ends.step.duration += step.setupDuration;
+					ends.step.start = step.end - ends.step.duration + recipe.offset;
+
+					if(methodStep.parallel) ends.methodStep.duration += methodStep.setupDuration;
+					ends.methodStep.start = methodStep.end - ends.methodStep.duration;
+
+					return ends;
+				}
+
+				angular.forEach(overlaps, function(step){
+					var recipe = ctrl.recipes[step.recipe];
+					var ends = calculateEnds(step, overlapFound, recipe);
+					var offset = -ends.methodStep.duration;
+
+					offset += ends.methodStep.finish - ends.step.finish;
+
+					recipe.offset += offset;
+
+					for(var stepIndex = step.index; stepIndex >= 0; stepIndex--){
+						console.log('recipe:' + (step.recipe+1), 'step:' + (recipe.steps[stepIndex].index+1));
+
+						recipe.steps[stepIndex].offset += offset;
+						recipe.steps[stepIndex].position.top = recipe.steps[stepIndex].offset*4 + 'px';
+					}
+				});
+
+				ctrl.buildScale(true);
+				ctrl.setupMethod();
+			},
+			processRecipe: function(stepAction, recipeAction){
+				var ctrl = this;
+				angular.forEach(ctrl.recipes, function(recipe, recipeIndex){
+					if(recipeAction) recipeAction(recipe, recipeIndex);
+					angular.forEach(recipe.steps, function(step, stepIndex){
+						if(stepAction) stepAction(step, stepIndex, recipe, recipeIndex);
+					});
+				});
+			},
+			stepPosition: function(step, index, recipe){
+				var position = {height: 0, top: 0};
+
+				var previousStep = index > 0 ? recipe.steps[index-1] : null;
+
+				if(step.offset === undefined) step.offset = 0;
+
+				if(!step.parallel) position.height = step.duration*4 + 'px';
+				else position.height = (step.duration + step.setupDuration)*4 + 'px';
+
+				if(previousStep){
+					step.offset += previousStep.offset;
+
+					if(previousStep.parallel){
+						step.offset += previousStep.setupDuration;
+						if(step.dependsOn) step.offset += previousStep.duration;
+						position.top = step.offset*4 + 'px';
+					}else{
+						if(step.dependsOn){
+							var finish = 0;
+
+							angular.forEach(step.dependsOn, function(dependentStep){
+								var dependent = recipe.steps[dependentStep];
+								var stepFinish = dependent.offset + dependent.duration;
+								if(dependent.parallel) stepFinish += dependent.setupDuration;
+								if(stepFinish > finish) finish = stepFinish;
+							});
+
+							step.offset = finish;
+						}else{
+							step.offset += previousStep.duration;
+						}
+						position.top = step.offset*4 + 'px';
+					}
+				}
+
+				step.position = position;
+
+				step.end = step.offset + step.duration + step.setupDuration;
+			},
+			stepComponent: function(step, setupComponent){
+				var styles = {height: 0, top: 0};
+
+				if(setupComponent){
+					styles.height = step.setupDuration*4 + 'px';
+				}else{
+					styles.height = step.duration*4 + 'px';
+					styles.top = step.setupDuration*4 + 'px';
+				}
+
+				return styles;
+			},
+			buildScale: function(update){
+				var ctrl = this, start = 0, finish = 0;
+
+				var findFinish = function(step, stepIndex, recipe){
+					var stepFinish = step.end + recipe.offset;
+					if(stepFinish > finish) finish = stepFinish;
+				};
+
+				ctrl.processRecipe(findFinish);
+
+				var finishTime = moment().add(finish, 'minutes');
+				var minute = Math.ceil(finishTime.minute()/5)*5;
+				if(minute == 60) minute = 0;
+				finishTime = finishTime.set('minute', minute);
+
+				angular.forEach(ctrl.recipes, function(recipe){
+					if(!update){
+						recipe.servingTime = finishTime;
+						ctrl.minFinishTime = finishTime;
+					}
+				});
+
+				ctrl.scale = [];
+				for(var i = 0; i*ctrl.scaleIncrement <= finish; i++){
+					ctrl.scale.push(i*ctrl.scaleIncrement);
+				}
+			},
+			scaleLabel: function(increment){
+				var minute = Math.ceil(moment().minute()/5)*5;
+				if(minute == 60) minute = 0;
+				var time = moment().set('minute', minute);
+				return time.add(increment, 'minutes').format('hh:mm');
+			},
+			moveTimeMarker: function(){
+				console.log('elapsedTime', this.elapsedTime);
+			},
+			setData: function(){
+				this.recipes = [
+					{
+						"name": "Recipe 1",
+						"steps": [
+							{ "description": "Step 1", "duration": 15, "parallel": false, "setupDuration": null, "dependsOn": null },
+							{ "description": "Step 2", "duration": 25, "parallel": true, "setupDuration": 5, "dependsOn": null },
+							{ "description": "Step 3", "duration": 10, "parallel": false, "setupDuration": null, "dependsOn": [1] }
+						]
+					},
+					{
+						"name": "Recipe 2",
+						"steps": [
+							{ "description": "Step 1", "duration": 25, "parallel": false, "setupDuration": null, "dependsOn": null },
+							{ "description": "Step 2", "duration": 30, "parallel": true, "setupDuration": 5, "dependsOn": null },
+							{ "description": "Step 3", "duration": 15, "parallel": false, "setupDuration": null, "dependsOn": null },
+							{ "description": "Step 4", "duration": 20, "parallel": false, "setupDuration": null, "dependsOn": [1, 2] }
+						]
+					},
+					{
+						"name": "Recipe 3",
+						"steps": [
+							{ "description": "Step 1", "duration": 5, "parallel": false, "setupDuration": null, "dependsOn": null },
+							{ "description": "Step 2", "duration": 10, "parallel": true, "setupDuration": 5, "dependsOn": null },
+							{ "description": "Step 3", "duration": 20, "parallel": false, "setupDuration": null, "dependsOn": [1] },
+							{ "description": "Step 4", "duration": 30, "parallel": true, "setupDuration": 5, "dependsOn": null },
+							{ "description": "Step 5", "duration": 20, "parallel": false, "setupDuration": null, "dependsOn": [3] }
+						]
+					}
+				];
+			}
+		};
 	});

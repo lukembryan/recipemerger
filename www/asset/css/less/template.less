@@ -2,76 +2,31 @@ body {
   color: #333;
 }
 
-header {
-  margin-bottom: 20px;
-  .time-picker {
-    display: inline-block;
-    vertical-align: bottom;
-  }
-}
-
-section {
-
-}
-
-.row {
-  position: relative;
-}
-
-.current-step {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1;
-  .description {
-    padding: 20px 0;
-    background-color: #ccc;
-  }
-}
-
-.recipe {
-  display: inline-block;
-  vertical-align: top;
-  .method {
-    position: relative;
-    margin-top: 20px;
-    .step {
-      position: absolute;
-      font-size: 0.8em;
-      background-color: #e7e7e7;
-      width: 50%;
-      -webkit-box-shadow: inset 0 0 1px 0 #333;
-      box-shadow: inset 0 0 1px 0 #333;
-      &.unmerged {
-        position: relative;
-      }
-      &.wait {
-        right: 0;
-      }
-      &.active {
-        background-color: lighten(blue, 30%);
-      }
+.step {
+  position: absolute;
+  box-sizing: border-box;
+  width: 50%;
+  color: #012C34;
+  background-color: lighten(#6A959D, 25%);
+  border: 1px solid #0F454F;
+  &.parallel {
+    margin-left: 50%;
+    color: #804D15;
+    background-color: #FFD7AA;
+    border: 1px solid #AA7539;
+    .setup {
+      background-color: lighten(#FFD7AA, 10%);
     }
   }
 }
 
-.time-marker {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  border-top: 1px solid red;
-  z-index: 1;
-  > span {
+.scale {
+  position: relative;
+  .increment {
     position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: 80px;
-    margin-left: -40px;
-    padding: 3px 5px;
-    background: #ccc;
-    text-align: center;
-    box-sizing: border-box;
+    width: 100%;
+    background-color: white;
+    text-align: right;
   }
 }
 
@@ -89,4 +44,14 @@ section {
 
 .uib-timepicker {
   // margin: 0 auto;
+}
+
+.table {
+  > thead {
+    > tr {
+        th {
+          padding-bottom: 20px;
+        }
+    }
+  }
 }
