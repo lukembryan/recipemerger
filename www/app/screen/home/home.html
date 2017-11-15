@@ -1,13 +1,15 @@
 <div ng-controller="homeController" ng-init="ctrl.init()">
   <div uib-timepicker ng-model="ctrl.elapsedTime" ng-change="ctrl.moveTimeMarker()" hour-step="1" minute-step="1" show-meridian="true" show-spinners="false" pad-hours="false"></div>
   <button ng-click="ctrl.fixOverlaps()">Next Overlap Check</button>
+  <button ng-click="ctrl.init()">Reset</button>
   <table class="table table-responsive">
     <thead>
       <tr>
         <th style="width: 100px;"></th>
         <th ng-repeat="recipe in ctrl.recipes">
           <h2>{{recipe.name}}</h2>
-          <div uib-timepicker ng-model="recipe.servingTime" min="ctrl.minFinishTime" hour-step="1" minute-step="5" show-meridian="true" show-spinners="false" pad-hours="false"></div>
+          <div>offset: {{recipe.offset}}</div>
+          <div uib-timepicker ng-model="recipe.servingTime" ng-change="ctrl.servingTimeChange($index)" min="ctrl.minFinishTime" hour-step="1" minute-step="5" show-meridian="true" show-spinners="false" pad-hours="false"></div>
         </th>
       </tr>
     </thead>
@@ -21,9 +23,9 @@
         </td>
         <td style="position: relative;" ng-repeat="recipe in ctrl.recipes">
           <div ng-style="step.position" class="step" ng-class="{'parallel': step.parallel}" ng-repeat="step in recipe.steps">
-            <div ng-if="!step.parallel">{{$index+1}}</div>
+            <div ng-if="!step.parallel">{{$index+1}} - {{step.offset}}:{{recipe.steps[0].offset + step.end}}</div>
             <div ng-if="step.parallel">
-              <div ng-style="ctrl.stepComponent(step, true)" class="setup">{{$index+1}}</div>
+              <div ng-style="ctrl.stepComponent(step, true)" class="setup">{{$index+1}} - {{step.offset}}:{{recipe.steps[0].offset + step.end}}</div>
               <div ng-style="ctrl.stepComponent(step)"></div>
             </div>
           </div>
