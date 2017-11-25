@@ -6,16 +6,35 @@ body {
   position: absolute;
   box-sizing: border-box;
   width: 50%;
-  color: #012C34;
   background-color: lighten(#6A959D, 25%);
   border: 1px solid #0F454F;
   &.parallel {
     margin-left: 50%;
-    color: #804D15;
     background-color: #FFD7AA;
     border: 1px solid #AA7539;
     .setup {
       background-color: lighten(#FFD7AA, 10%);
+    }
+  }
+  &.merged {
+    border-color: #333;
+    background-color: #ccc;
+    .setup {
+      background-color: lighten(#ccc, 10%);
+    }
+  }
+  &.hold {
+    border-color: blue;
+    background-color: lighten(blue, 30%);
+    .setup {
+      background-color: lighten(blue, 40%);
+    }
+  }
+  &.overlap {
+    border-color: red;
+    background-color: lighten(red, 30%);
+    .setup {
+      background-color: lighten(red, 40%);
     }
   }
 }
