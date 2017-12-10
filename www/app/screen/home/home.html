@@ -1,15 +1,21 @@
 <div ng-controller="homeController" ng-init="ctrl.init()">
-  <!--<div uib-timepicker ng-model="ctrl.elapsedTime" ng-change="ctrl.moveTimeMarker()" hour-step="1" minute-step="1" show-meridian="true" show-spinners="false" pad-hours="false"></div>-->
-  <button class="btn" ng-click="ctrl.stepThrough()">{{{true: 'Next Overlap Scan', false: 'Fix Overlap'}[!ctrl.stepToHold]}}</button>
-  <button class="btn" ng-click="ctrl.init()">Reset</button>
+  <div class="text-right">
+    <button class="btn" ng-click="ctrl.stepThrough()">{{{true: 'Next Overlap Scan', false: 'Fix Overlap'}[!ctrl.stepToHold]}}</button>
+    <button class="btn" ng-click="ctrl.merge()">Merge All</button>
+    <button class="btn" ng-click="ctrl.init()">Reset</button>
+  </div>
   <table class="table table-responsive">
     <thead>
       <tr>
         <th style="width: 100px;"></th>
         <th ng-repeat="recipe in ctrl.recipes">
           <h2>{{recipe.name}}</h2>
-          <div>offset: {{recipe.offset}}</div>
-          <div uib-timepicker ng-model="recipe.servingTime" ng-change="ctrl.servingTimeChange($index)" min="ctrl.minFinishTime" hour-step="1" minute-step="5" show-meridian="true" show-spinners="false" pad-hours="false"></div>
+          <div class="input-group" moment-picker="recipe.servingTime" format="Do MMMM, h:mm a" today="true" change="ctrl.servingTimeChange($index)">
+            <span class="input-group-addon">
+              <i class="fa fa-clock-o"></i>
+              <span style="margin-left: 10px;">{{recipe.servingTime}}</span>
+            </span>
+          </div>
         </th>
       </tr>
     </thead>
@@ -23,9 +29,9 @@
         </td>
         <td style="position: relative;" ng-repeat="recipe in ctrl.recipes">
           <div ng-style="step.position" class="step" ng-class="{'parallel': step.parallel, 'merged': step.merged, 'hold': ctrl.isStepToHold(step), 'overlap': ctrl.isOverlap(step)}" ng-repeat="step in recipe.steps">
-            <div ng-if="!step.parallel">{{$index+1}} - {{step.offset}}:{{recipe.steps[0].offset + step.end}}</div>
+            <div ng-if="!step.parallel">{{$index+1}} - {{step.offset}}:{{recipe.steps[0].offset + step.end}} <i class="fa fa-lock pull-right" ng-if="step.mustPrecede"></i></div>
             <div ng-if="step.parallel">
-              <div ng-style="ctrl.stepComponent(step, true)" class="setup">{{$index+1}} - {{step.offset}}:{{recipe.steps[0].offset + step.end}}</div>
+              <div ng-style="ctrl.stepComponent(step, true)" class="setup">{{$index+1}} - {{step.offset}}:{{recipe.steps[0].offset + step.end}} <i class="fa fa-lock pull-right" ng-if="step.mustPrecede"></i></div>
               <div ng-style="ctrl.stepComponent(step)"></div>
             </div>
           </div>

@@ -1,6 +1,9 @@
 body {
   color: #333;
 }
+body > .container {
+  padding: 50px 0;
+}
 .step {
   position: absolute;
   box-sizing: border-box;
@@ -44,7 +47,6 @@ body {
   position: absolute;
   width: 100%;
   background-color: white;
-  text-align: right;
 }
 .uib-time input,
 .uib-time button {
@@ -56,6 +58,15 @@ body {
 .uib-time button {
   width: auto;
 }
-.table > thead > tr th {
+.time-picker {
+  display: inline-block;
+}
+.time-picker + button {
+  vertical-align: top;
+}
+.table > thead > tr > th {
   padding-bottom: 20px;
+}
+.table > tbody > tr > td {
+  padding: 0;
 }
