@@ -1,0 +1,42 @@
+<div ng-controller="cookController" ng-init="ctrl.init()">
+  <div class="text-right">
+    <button class="btn" ng-click="ctrl.stepThrough()">{{{true: 'Next Overlap Scan', false: 'Fix Overlap'}[!ctrl.stepToHold]}}</button>
+    <button class="btn" ng-click="ctrl.merge()">Merge All</button>
+    <button class="btn" ng-click="ctrl.init()">Reset</button>
+  </div>
+  <table class="table table-responsive logic">
+    <thead>
+      <tr>
+        <th style="width: 100px;"></th>
+        <th ng-repeat="recipe in ctrl.recipes">
+          <h4>{{recipe.name}}</h4>
+          <div class="input-group" moment-picker="recipe.servingTime" format="Do MMMM, h:mm a" today="true" change="ctrl.servingTimeChange($index)">
+            <span class="input-group-addon">
+              <i class="fa fa-clock-o"></i>
+              <span style="margin-left: 10px;">{{recipe.servingTime}}</span>
+            </span>
+          </div>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="scale">
+          <div class="increment" ng-style="{'top': (increment*4)-ctrl.scaleIncrement*2 + 'px'}" ng-repeat="increment in ctrl.scale track by $index">
+            <span class="value">{{ctrl.scaleLabel(increment)}}</span>
+            <span class="marker">- {{$index*5}}</span>
+          </div>
+        </td>
+        <td style="position: relative;" ng-repeat="recipe in ctrl.recipes">
+          <div ng-style="step.position" class="step" ng-class="{'parallel': step.parallel, 'merged': step.merged, 'hold': ctrl.isStepToHold(step), 'overlap': ctrl.isOverlap(step)}" ng-repeat="step in recipe.steps" uib-tooltip="{{$index+1}} ({{step.offset}}-{{recipe.steps[0].offset + step.end}}) : '{{step.description}}'">
+            <div ng-if="!step.parallel"></div>
+            <div ng-if="step.parallel">
+              <div ng-style="ctrl.stepComponent(step, true)" class="setup"></div>
+              <div ng-style="ctrl.stepComponent(step)"></div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

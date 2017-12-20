@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('recipeMerger', [
+angular.module('sous', [
   'ngResource',
   'ngAnimate',
   'ngSanitize',
@@ -14,7 +14,10 @@ angular.module('recipeMerger', [
 		$urlRouterProvider.otherwise('/');
 
 		$stateProvider
-			.state('home', 			    {url: '/', 									       templateUrl: 'app/screen/home/home.html'})//;
+			.state('home', 			    {url: '/', 									        templateUrl: 'app/screen/home/home.html'})
+			.state('recipes', 			{url: '/recipes', 								  templateUrl: 'app/screen/recipes/recipes.html'})
+			.state('cook', 			    {url: '/cook', 								      templateUrl: 'app/screen/cook/cook.html'})
+			.state('admin', 			  {url: '/admin', 									  templateUrl: 'app/screen/admin/admin.html'});
 
     $locationProvider.html5Mode(true);
 	})
@@ -51,19 +54,39 @@ angular.module('recipeMerger', [
     });
   }])
 
-	.controller('rootController', function($scope, $rootScope, $state, $location, $resource, $q, $timeout, $interval, $window, recipes, findInArray, guid) {
-    //console.log(guid());
+	.controller('rootController', function($scope, $rootScope, $state, $transitions, $location, $resource, $q, $timeout, $interval, $window, recipes, findInArray, guid) {
+    $transitions.onStart({}, function(){});
 
-		$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){});
+    $transitions.onSuccess({}, function(transition){
+      $rootScope.state = transition.to().name;
+    });
 
-		$rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){});
+    var config = {
+      apiKey: "AIzaSyAxt6H_sdMzVQ0dKcQ0SmHf9rqSgXgP98Q",
+      authDomain: "sous-833df.firebaseapp.com",
+      databaseURL: "https://sous-833df.firebaseio.com",
+      projectId: "sous-833df",
+      storageBucket: "sous-833df.appspot.com",
+      messagingSenderId: "691654776185"
+    };
+    firebase.initializeApp(config);
+
+    $rootScope.db = firebase.firestore();
+    $rootScope.storage = firebase.storage();
+
+    $rootScope.recipes = null;
+
+    $rootScope.loading = {
+      show: false,
+      label: ''
+    };
 	})
 
 	.factory('recipes', function ($rootScope, $q, $resource, $window){
 		return {
       fromFile: function(recipeId){
         this.resource(recipeId).then(function(success){
-          $rootScope.data.push(success);
+          $rootScope.recipes.push(success);
         },function(error){
           console.log('recipes.fromFile', error);
         });
@@ -86,8 +109,55 @@ angular.module('recipeMerger', [
 				);
 
 				return promise;
-			}
-		};
+			},
+      template: function(component){
+        var template;
+
+        switch(component){
+          case 'ingredientGroup':
+            template = {
+              component: '',
+              list: []
+            };
+            break;
+          case 'ingredient':
+            template = {
+              description: '',
+              quantity: '',
+              unit: ''
+            };
+            break;
+          case 'step':
+            template = {
+              description: '',
+              duration: 1,
+              parallel: false,
+              setupDuration: null,
+              dependsOn: null
+            };
+            break;
+          default:
+            template = {
+              name: '',
+              description: '',
+              image: '',
+              tags: [],
+              serves: 1,
+              source: {
+                name: '',
+                url: '',
+                reference: ''
+              },
+              ingredients: [],
+              steps: [],
+              enabled: true
+            };
+            break;
+        }
+
+        return template;
+      }
+		}
 	})
 
 	.factory('guid', function(){

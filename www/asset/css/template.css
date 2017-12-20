@@ -1,8 +1,58 @@
 body {
   color: #333;
+  font-size: 14px;
+  font-family: 'Titillium Web', sans-serif;
 }
-body > .container {
-  padding: 50px 0;
+body > .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('../image/bg-black-50.png');
+  z-index: 5;
+}
+body > .overlay.ng-enter {
+  -webkit-animation: fadeIn 0.3s both;
+  animation: fadeIn 0.3s both;
+}
+body > .overlay.ng-leave {
+  -webkit-animation: fadeOut 0.3s 0.3s both;
+  animation: fadeOut 0.3s 0.3s both;
+}
+body > .overlay > .message {
+  position: fixed;
+  top: 50%;
+  width: 100%;
+  height: 20px;
+  text-align: center;
+  color: #fff;
+  margin-top: -10px;
+}
+[ng\:cloak],
+[ng-cloak],
+[data-ng-cloak],
+[x-ng-cloak],
+.ng-cloak,
+.x-ng-cloak {
+  display: none !important;
+}
+h1 {
+  font-size: 3.5em;
+  font-family: 'Dancing Script', cursive;
+}
+h2,
+h3,
+h4,
+h5 {
+  font-family: 'Kanit', sans-serif;
+}
+.nav {
+  margin: 20px 0;
+}
+.nav.nav-pills > li > a {
+  border-radius: 0;
+  text-decoration: none;
 }
 .step {
   position: absolute;
@@ -64,9 +114,149 @@ body > .container {
 .time-picker + button {
   vertical-align: top;
 }
-.table > thead > tr > th {
+form label {
+  display: block;
+  width: 100%;
+  font-weight: normal;
+  text-transform: uppercase;
+  font-size: 0.8em;
+}
+form input,
+form textarea,
+form select {
+  display: block;
+  width: 100%;
+  padding: 3px 5px;
+}
+form .form-field {
+  position: relative;
+  margin-bottom: 15px;
+}
+form .form-field.half-width {
+  width: 50%;
+}
+form .form-field .checkbox {
+  font-size: 1.5em;
+  margin: 5px 0 0 0;
+}
+form .form-field .btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+form .half-width .form-field {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 50%;
+  margin: 0 -3px 15px 0;
+  vertical-align: top;
+}
+form .half-width .form-field + .form-field {
+  margin: 0 0 15px -3px;
+}
+form .edit {
+  background-color: #ddd;
+  padding: 15px;
+  margin: 15px -15px;
+}
+.table.logic > thead > tr > th {
   padding-bottom: 20px;
 }
-.table > tbody > tr > td {
+.table.logic > tbody > tr > td {
   padding: 0;
+}
+a,
+.link {
+  color: #204d74;
+  text-decoration: underline;
+  cursor: pointer;
+}
+a.no-underline,
+.link.no-underline {
+  text-decoration: none;
+}
+hr {
+  border-top-color: #333;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+hr.short {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+hr.dotted {
+  border-top-style: dashed;
+  border-top-color: #999;
+}
+hr.spacer {
+  border-top-color: transparent;
+}
+.btn {
+  border-radius: 0;
+}
+.empty {
+  text-decoration: center;
+  padding: 15px;
+}
+.badge {
+  margin-right: 5px;
+}
+.badge > .link {
+  color: white;
+}
+.panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 600px;
+  max-width: 100%;
+  margin-bottom: 0;
+  background-color: #efefef;
+  overflow-y: scroll;
+  -webkit-box-shadow: 5px 0px 30px 1px #666;
+  -moz-box-shadow: 5px 0px 30px 1px #666;
+  box-shadow: 5px 0px 30px 1px #666;
+}
+.panel.ng-enter {
+  -webkit-animation: slideInRight 0.3s;
+  -moz-animation: slideInRight 0.3s;
+  animation: slideInRight 0.3s;
+}
+.panel.ng-leave {
+  -webkit-animation: slideOutRight 0.3s;
+  -moz-animation: slideOutRight 0.3s;
+  animation: slideOutRight 0.3s;
+}
+.panel > .inner {
+  position: relative;
+}
+.panel > .inner > h3 {
+  margin: 10px 0 0;
+  padding: 15px;
+}
+.panel > .inner > section {
+  padding: 15px;
+}
+.panel > .inner > section > h4 {
+  position: relative;
+  margin: 10px 0 0;
+}
+.panel > .inner > section > h4 > .btn {
+  position: absolute;
+  top: -5px;
+  right: 0;
+}
+.panel > .inner > section h5 {
+  font-weight: bold;
+}
+.panel > .inner > section .recipe-image {
+  width: 100%;
+  border: 1px solid #666;
+}
+.panel > .inner > .top-buttons {
+  position: absolute;
+  top: 15px;
+  right: 15px;
 }

@@ -23,8 +23,8 @@
       "description": "",
       "duration": 0,
       "parallel": false,
-      "overlap": null,
-      "precede": null
+      "setupDuration": null,
+      "dependsOn": null
     }
   ]
 }

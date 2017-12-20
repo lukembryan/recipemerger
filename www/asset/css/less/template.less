@@ -1,7 +1,59 @@
+@link-colour: #204d74;
+
 body {
   color: #333;
-  > .container {
-    padding: 50px 0;
+  font-size: 14px;
+  font-family: 'Titillium Web', sans-serif;
+  > .container {}
+  > .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('../image/bg-black-50.png');
+    z-index: 5;
+    &.ng-enter {
+  	  -webkit-animation: fadeIn 0.3s both;
+      animation: fadeIn 0.3s both;
+    }
+    &.ng-leave {
+      -webkit-animation: fadeOut 0.3s 0.3s both;
+    	animation: fadeOut 0.3s 0.3s both;
+    }
+    > .message {
+      position: fixed;
+      top: 50%;
+      width: 100%;
+      height: 20px;
+      text-align: center;
+      color: #fff;
+      margin-top: -10px;
+    }
+  }
+}
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
+}
+
+h1 {
+  font-size: 3.5em;
+  font-family: 'Dancing Script', cursive;
+}
+h2, h3, h4, h5 {
+  font-family: 'Kanit', sans-serif;
+}
+
+.nav {
+  margin: 20px 0;
+  &.nav-pills {
+    > li {
+      > a {
+        border-radius: 0;
+        text-decoration: none;
+      }
+    }
   }
 }
 
@@ -73,19 +125,168 @@ body {
   }
 }
 
+form {
+  label {
+    display: block;
+    width: 100%;
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: 0.8em;
+  }
+  input, textarea, select {
+    display: block;
+    width: 100%;
+    padding: 3px 5px;
+  }
+  .form-field {
+    position: relative;
+    margin-bottom: 15px;
+    &.half-width {
+      width: 50%;
+    }
+    .checkbox {
+      font-size: 1.5em;
+      margin: 5px 0 0 0;
+    }
+    .btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+    }
+  }
+  .half-width {
+		.form-field {
+			display: inline-block;
+			box-sizing: border-box;
+			width: 50%;
+			margin: 0 -3px 15px 0;
+      vertical-align: top;
+			+ .form-field {
+				margin: 0 0 15px -3px;
+			}
+		}
+	}
+  .edit {
+    background-color: #ddd;
+    padding: 15px;
+    margin: 15px -15px;
+  }
+}
+
 .table {
-  > thead {
-    > tr {
-      > th {
-        padding-bottom: 20px;
+  &.logic {
+    > thead {
+      > tr {
+        > th {
+          padding-bottom: 20px;
+        }
+      }
+    }
+    > tbody {
+      > tr {
+        > td {
+          padding: 0;
+        }
       }
     }
   }
-  > tbody {
-    > tr {
-      > td {
-        padding: 0;
+}
+
+a, .link {
+  color: @link-colour;
+  text-decoration: underline;
+  cursor: pointer;
+  &.no-underline {
+    text-decoration: none;
+  }
+}
+
+hr {
+  border-top-color: #333;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  &.short {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+  &.dotted {
+    border-top-style: dashed;
+    border-top-color: #999;
+  }
+  &.spacer {
+    border-top-color: transparent;
+  }
+}
+
+.btn {
+  border-radius: 0;
+}
+
+.empty {
+  text-decoration: center;
+  padding: 15px;
+}
+
+.badge {
+  margin-right: 5px;
+  > .link {
+    color: white;
+  }
+}
+
+.panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 600px;
+  max-width: 100%;
+  margin-bottom: 0;
+  background-color: #efefef;
+  overflow-y: scroll;
+  -webkit-box-shadow: 5px 0px 30px 1px #666;
+  -moz-box-shadow: 5px 0px 30px 1px #666;
+  box-shadow: 5px 0px 30px 1px #666;
+  &.ng-enter {
+    -webkit-animation: slideInRight 0.3s;
+    -moz-animation: slideInRight 0.3s;
+    animation: slideInRight 0.3s;
+  }
+  &.ng-leave {
+    -webkit-animation: slideOutRight 0.3s;
+    -moz-animation: slideOutRight 0.3s;
+    animation: slideOutRight 0.3s;
+  }
+  > .inner {
+    position: relative;
+    > h3 {
+      margin: 10px 0 0;
+      padding: 15px;
+    }
+    > section {
+      padding: 15px;
+      > h4 {
+        position: relative;
+        margin: 10px 0 0;
+        > .btn {
+          position: absolute;
+          top: -5px;
+          right: 0;
+        }
       }
+      h5 {
+        font-weight: bold;
+      }
+      .recipe-image {
+        width: 100%;
+        border: 1px solid #666;
+      }
+    }
+    > .top-buttons {
+      position: absolute;
+      top: 15px;
+      right: 15px;
     }
   }
 }

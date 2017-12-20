@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="recipeMerger" ng-controller="rootController">
+<html lang="en" ng-app="sous" ng-controller="rootController">
 	<head>
 		<meta charset="utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-		<title>Recipe Merger</title>
+		<title>Sous</title>
 		<link rel="icon" href="asset/image/favicon.ico">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<base href="/" />
@@ -12,11 +12,27 @@
     <link rel="stylesheet" type="text/css" href="lib/animate.css/animate.min.css">
 		<link rel="stylesheet" type="text/css" href="lib/angular-moment-picker/dist/angular-moment-picker.min.css">
 		<link rel="stylesheet" type="text/css" href="asset/css/template.min.css">
+		<link href="https://fonts.googleapis.com/css?family=Kanit:600|Titillium+Web|Dancing+Script:700" rel="stylesheet">
 	</head>
 	<body>
+		<div class="overlay" ng-if="$root.loading.show" ng-cloak>
+			<div class="message">{{$root.loading.label}}</div>
+		</div>
 		<div class="container">
+			<h1>Sous</h1>
+			<h4>Multiple recipes, one method</h4>
+		  <ul class="nav nav-pills">
+		    <li role="presentation" ng-class="{'active': $root.state == 'home'}"><a href="/">Home</a></li>
+		    <li role="presentation" ng-class="{'active': $root.state == 'recipes'}"><a href="/recipes">Recipes</a></li>
+		    <li role="presentation" ng-class="{'active': $root.state == 'cook'}"><a href="/cook">Cook</a></li>
+		    <li role="presentation" ng-class="{'active': $root.state == 'admin'}"><a href="/admin">Admin</a></li>
+		  </ul>
 			<article ui-view ng-cloak></article>
 		</div>
+
+		<script src="https://www.gstatic.com/firebasejs/4.8.0/firebase.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/4.8.0/firebase-firestore.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/4.8.0/firebase-storage.js"></script>
 
 		<script type="text/javascript" src="lib/angular/angular.min.js"></script>
     <script type="text/javascript" src="lib/angular-resource/angular-resource.min.js"></script>
@@ -30,6 +46,10 @@
 		<script type="text/javascript" src="lib/angular-moment-picker/dist/angular-moment-picker.min.js"></script>
 
     <script type="text/javascript" src="app/app.js"></script>
-    <script src="app/screen/home/home.controller.js"></script>
+
+    <script type="text/javascript" src="app/screen/home/home.controller.js"></script>
+    <script type="text/javascript" src="app/screen/recipes/recipes.controller.js"></script>
+    <script type="text/javascript" src="app/screen/cook/cook.controller.js"></script>
+    <script type="text/javascript" src="app/screen/admin/admin.controller.js"></script>
 	</body>
 </html>
