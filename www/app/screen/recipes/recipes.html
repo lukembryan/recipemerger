@@ -1,3 +1,14 @@
 <div ng-controller="recipesController">
-  [ recipes ]
+  <div class="empty" ng-if="!$root.recipes">
+    no recipes to show
+  </div>
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-3 col-lg-2" ng-repeat="(id, recipe) in $root.recipes">
+      <h5>{{recipe.name}}</h5>
+      <div class="image directory-image" ng-style="recipe.imageStyle" ng-click="$root.currentRecipe = recipe">
+        <div class="status" ng-if="ctrl.recipeAdded(id)">in menu</div>
+        <button class="btn btn-primary" ng-if="!ctrl.recipeAdded(id)" ng-click="$event.stopPropagation(); ctrl.menu.addRecipe(id);"><i class="fa fa-plus"></i></button>
+      </div>
+    </div>
+  </div>
 </div>

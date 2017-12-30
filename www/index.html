@@ -7,17 +7,29 @@
 		<link rel="icon" href="asset/image/favicon.ico">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<base href="/" />
+
 		<link rel="stylesheet" type="text/css" href="lib/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="lib/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="lib/animate.css/animate.min.css">
 		<link rel="stylesheet" type="text/css" href="lib/angular-moment-picker/dist/angular-moment-picker.min.css">
-		<link rel="stylesheet" type="text/css" href="asset/css/template.min.css">
+		<link rel="stylesheet" type="text/css" href="lib/firebaseui/dist/firebaseui.css" />
+
 		<link href="https://fonts.googleapis.com/css?family=Kanit:600|Titillium+Web|Dancing+Script:700" rel="stylesheet">
+
+		<link rel="stylesheet" type="text/css" href="asset/css/template.min.css">
 	</head>
 	<body>
 		<div class="overlay" ng-if="$root.loading.show" ng-cloak>
 			<div class="message">{{$root.loading.label}}</div>
 		</div>
+		<menu-panel></menu-panel>
+		<recipe-panel></recipe-panel>
+		<button class="btn btn-primary menu-toggle" ng-click="$root.showMenu = true" ng-cloak>
+			<strong>MENU</strong>
+			<span class="badge">{{$root.menu.recipes.length}}</span>
+		</button>
+		<div class="overlay panel-overlay" ng-if="$root.showMenu" ng-click="$root.showMenu = false"></div>
+		<div class="overlay panel-overlay" ng-if="$root.currentRecipe" ng-click="$root.currentRecipe = null"></div>
 		<div class="container">
 			<h1>Sous</h1>
 			<h4>Multiple recipes, one method</h4>
@@ -30,9 +42,9 @@
 			<article ui-view ng-cloak></article>
 		</div>
 
-		<script src="https://www.gstatic.com/firebasejs/4.8.0/firebase.js"></script>
-		<script src="https://www.gstatic.com/firebasejs/4.8.0/firebase-firestore.js"></script>
-		<script src="https://www.gstatic.com/firebasejs/4.8.0/firebase-storage.js"></script>
+		<script type="text/javascript" src="lib/firebase/firebase.js"></script>
+		<script type="text/javascript" src="lib/firebase/firebase-firestore.js"></script>
+		<script type="text/javascript" src="lib/firebase/firebase-storage.js"></script>
 
 		<script type="text/javascript" src="lib/angular/angular.min.js"></script>
     <script type="text/javascript" src="lib/angular-resource/angular-resource.min.js"></script>
@@ -51,5 +63,7 @@
     <script type="text/javascript" src="app/screen/recipes/recipes.controller.js"></script>
     <script type="text/javascript" src="app/screen/cook/cook.controller.js"></script>
     <script type="text/javascript" src="app/screen/admin/admin.controller.js"></script>
+
+		<script type="text/javascript" src="lib/firebaseui/dist/firebaseui.js"></script>
 	</body>
 </html>

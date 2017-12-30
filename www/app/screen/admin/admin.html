@@ -3,13 +3,18 @@
     <thead>
       <th>Name</th>
       <th>Tags</th>
+      <th>Source</th>
       <th>Enabled</th>
       <th><button class="btn btn-primary pull-right" ng-click="ctrl.addRecipe()"><i class="fa fa-plus"></i></button></th>
     </thead>
     <tbody>
-      <tr ng-repeat="(id, recipe) in $root.recipes">
+      <tr ng-repeat="(id, recipe) in $root.adminRecipes">
         <td>{{recipe.name}}</td>
         <td><span class="badge" ng-repeat="tag in recipe.tags">{{tag}}</span></td>
+        <td>
+          <a href="{{recipe.source.url}}" target="_blank" ng-if="recipe.source.url">{{recipe.source.name}}</a>
+          <strong ng-if="recipe.source.reference">{{recipe.source.reference}}</strong>
+        </td>
         <td>{{recipe.enabled ? 'Yes' : 'No'}}</td>
         <td class="text-right"><button class="btn btn-primary" ng-click="ctrl.editRecipe(id)"><i class="fa fa-edit"></i></button></td>
       </tr>
@@ -36,6 +41,9 @@
         <hr />
         <div class="row" ng-if="!ctrl.edit.details">
           <div class="col-sm-12 col-md-6 col-lg-6">
+            <div class="image recipe-image-edit" ng-style="ctrl.recipe.imageStyle"></div>
+          </div>
+          <div class="col-sm-12 col-md-6 col-lg-6">
             <div><strong>{{ctrl.recipe.name}}</strong></div>
             <div>{{ctrl.recipe.description}}</div>
             <hr class="short spacer" />
@@ -54,13 +62,20 @@
               <strong ng-if="ctrl.recipe.source.reference">{{ctrl.recipe.source.reference}}</strong>
             </div>
           </div>
-          <div class="col-sm-12 col-md-6 col-lg-6">
-            <img id="{{ctrl.edit.recipe}}" src="" class="recipe-image" />
-          </div>
         </div>
         <div class="edit" ng-if="ctrl.edit.details">
           <div class="row">
-            <div class="form-field col-sm-12 col-md-6 col-lg-6">
+            <div class="col-sm-12 col-md-6 col-lg-6">
+              <div class="form-field col-sm-12 col-md-12 col-lg-12">
+                <label>Image</label>
+                <input type="file" id="newImage" name="image" />
+                <div class="image recipe-image-edit" ng-style="ctrl.recipe.imageStyle"></div>
+                <button style="margin-top: 10px;" class="btn btn-primary" ng-click="ctrl.saveImage()">
+                  <i class="fa fa-check"></i>
+                </button>
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-6">
               <div class="form-field col-sm-12 col-md-8 col-lg-8">
                 <label>Name</label>
                 <input type="text" name="name" ng-model="ctrl.recipe.name" />
@@ -84,16 +99,6 @@
                     <i class="link fa fa-close no-underline"></i>
                   </span>
                 </div>
-              </div>
-            </div>
-            <div class="form-field col-sm-12 col-md-6 col-lg-6">
-              <div class="form-field col-sm-12 col-md-12 col-lg-12">
-                <label>Image</label>
-                <input type="file" id="newImage" name="image" />
-                <img id="{{ctrl.edit.recipe}}" src="" class="recipe-image" />
-                <button style="margin-top: 10px;" class="btn btn-primary" ng-click="ctrl.saveImage()">
-                  <i class="fa fa-check"></i>
-                </button>
               </div>
             </div>
           </div>
@@ -125,14 +130,15 @@
         </div>
         <div class="row">
           <div ng-repeat="ingredients in ctrl.recipe.ingredients">
-            <div class="col-sm-12 col-md-12 col-lg-12">
+            <div class="ingredient-list col-sm-12 col-md-12 col-lg-12">
               <hr class="short spacer" ng-if="$index > 0" />
-              <button style="margin-top: 10px;" class="btn btn-primary pull-right" ng-click="ctrl.edit.ingredientGroup = ingredients.component" ng-if="ctrl.edit.ingredientGroup != ingredients.component">
-                <i class="fa fa-edit"></i>
-              </button>
               <h5 ng-if="ctrl.edit.ingredientGroup != ingredients.component && ctrl.recipe.ingredients.length > 1">{{ingredients.component}}</h5>
-              <div ng-repeat="ingredient in ingredients.list" ng-if="ctrl.edit.ingredientGroup != ingredients.component">
-                <span>{{ingredient.description}} <span ng-if="ingredient.quantity || ingredient.unit">-</span> {{ingredient.quantity}} {{ingredient.unit}}</span>
+              <span class="link" ng-click="ctrl.edit.ingredientGroup = ingredients.component" ng-if="ctrl.edit.ingredientGroup != ingredients.component">
+                edit
+              </span>
+              <div class="ingredient" ng-repeat="ingredient in ingredients.list" ng-if="ctrl.edit.ingredientGroup != ingredients.component">
+                <span>{{ingredient.description}}</span>
+                <span class="badge pull-right" ng-if="ingredient.quantity || ingredient.unit">{{ingredient.quantity}} {{ingredient.unit}}</span>
               </div>
               <div class="edit" ng-show="ctrl.edit.ingredientGroup == ingredients.component">
                 <h5>
@@ -270,4 +276,5 @@
       </section>
     </form>
   </div>
+  <div class="overlay panel-overlay" ng-if="ctrl.recipe" ng-click="ctrl.recipe = null"></div>
 </div>

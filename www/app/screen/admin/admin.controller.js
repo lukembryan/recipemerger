@@ -15,21 +15,7 @@ angular.module('sous')
 			newTag: '',
 			newImage: null,
 			init: function(){
-				var recipes = $rootScope.db.collection('recipes');
-
-				$rootScope.loading = { show: true, label: 'loading recipes' };
-
-				recipes.onSnapshot(function(querySnapshot){
-					$timeout(function(){
-						$rootScope.recipes = {};
-						
-						querySnapshot.forEach(function(doc){
-							$rootScope.recipes[doc.id] = doc.data();
-						});
-
-						$rootScope.loading = { show: false, label: '' };
-					}, 0);
-		    });
+				recipes.load(true);
 			},
 			save: function(){
 				var ctrl = this;
@@ -74,9 +60,8 @@ angular.module('sous')
 			},
 			editRecipe: function(id){
 				var ctrl = this;
-				ctrl.recipe = $rootScope.recipes[id];
+				ctrl.recipe = $rootScope.adminRecipes[id];
 				ctrl.edit.recipe = id;
-				ctrl.getImage(ctrl.recipe.image);
 			},
 			addRecipe: function(){
 				var ctrl = this;
@@ -87,7 +72,6 @@ angular.module('sous')
 			editDetails: function(){
 				var ctrl = this;
 				ctrl.edit.details = !ctrl.edit.details;
-				ctrl.getImage(ctrl.recipe.image);
 
 				if(ctrl.edit.details){
 					$timeout(function(){
@@ -150,45 +134,20 @@ angular.module('sous')
 				step.dependsOn.splice(index, 1);
 				if(step.dependsOn.length == 0) step.dependsOn = null;
 			},
-			getImage: function(image){
-				var ctrl = this;
-
-				if(!image) image = 'recipe-photos/placeholder.png';
-
-				var ref = $rootScope.storage.ref(image);
-
-				ref.getDownloadURL().then(function(url){
-					var img = document.getElementById(ctrl.edit.recipe);
-  				img.src = url;
-				}).catch(function(error){
-				  switch(error.code){
-				    case 'storage/object_not_found':
-				      // File doesn't exist
-				      break;
-				    case 'storage/unauthorized':
-				      // User doesn't have permission to access the object
-				      break;
-				    case 'storage/canceled':
-				      // User canceled the upload
-				      break;
-				    case 'storage/unknown':
-				      // Unknown error occurred, inspect the server response
-				      break;
-				  }
-				});
-			},
 			saveImage: function(){
 				var ctrl = this, reader = new FileReader();
 				var url = 'recipe-photos/' + ctrl.newImage.name;
 				var ref = $rootScope.storage.ref(url);
+
 				reader.readAsDataURL(ctrl.newImage);
+
 				reader.onload = function () {
 					ref.putString(reader.result, 'data_url').then(function(snapshot) {
 					  ctrl.recipe.image = url;
-						ctrl.getImage(ctrl.recipe.image);
 						ctrl.newImage = null;
 					});
 				};
+
 				reader.onerror = function (error) {
 					console.log('Error: ', error);
 				};
