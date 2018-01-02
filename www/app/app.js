@@ -14,7 +14,7 @@ angular.module('sous', [
 		$urlRouterProvider.otherwise('/');
 
 		$stateProvider
-			.state('home', 			    {url: '/', 									        templateUrl: 'app/screen/home/home.html'})
+			.state('how-it-works', 	{url: '/', 									        templateUrl: 'app/screen/how-it-works/how-it-works.html'})
 			.state('recipes', 			{url: '/recipes', 								  templateUrl: 'app/screen/recipes/recipes.html'})
 			.state('cook', 			    {url: '/cook', 								      templateUrl: 'app/screen/cook/cook.html'})
 			.state('admin', 			  {url: '/admin', 									  templateUrl: 'app/screen/admin/admin.html'});
@@ -55,7 +55,9 @@ angular.module('sous', [
   }])
 
 	.controller('rootController', function($scope, $rootScope, $state, $transitions, $location, $timeout, $interval, $window, authentication, recipes, menu, findInArray, guid) {
-    $transitions.onStart({}, function(){});
+    $transitions.onStart({}, function(transition){
+      //console.log('admin', authentication.isAdmin());
+    });
 
     $transitions.onSuccess({}, function(transition){
       $rootScope.state = transition.to().name;
@@ -72,6 +74,10 @@ angular.module('sous', [
 
     firebase.initializeApp(config);
 
+    $rootScope.auth = null;
+
+    $scope.authentication = authentication;
+    $rootScope.auth = firebase.auth();
     authentication.init();
 
     $rootScope.db = firebase.firestore();
@@ -96,18 +102,61 @@ angular.module('sous', [
   .factory('authentication', function ($rootScope, $timeout){
     return {
       init: function(){
-        firebase.auth().onAuthStateChanged(function(user){
+        $rootScope.auth.onAuthStateChanged(function(user){
           if(user){
-            console.log('user', user);
-          } else {
-            console.log('signed out');
+            user.getIdToken().then(function(accessToken){
+              $timeout(function(){
+                if(!user.isAnonymous){
+                  $rootScope.user = {
+                    displayName: user.displayName,
+                    email: user.email,
+                    emailVerified: user.emailVerified,
+                    phoneNumber: user.phoneNumber,
+                    photoURL: user.photoURL,
+                    uid: user.uid,
+                    accessToken: accessToken,
+                    providerData: user.providerData
+                  };
+                }else{
+                  $rootScope.user = null;
+                }
+              }, 0);
+
+              console.log('$rootScope.user', $rootScope.user);
+            });
+          }else{
+            $rootScope.auth.signInAnonymously().catch(function(error){
+              var errorCode = error.code;
+              var errorMessage = error.message;
+            });
           }
         });
-
-        firebase.auth().signInAnonymously().catch(function(error){
+      },
+      logIn: function(credentials){
+        $rootScope.auth.signInWithEmailAndPassword(credentials.email, credentials.password).catch(function(error) {
+          // Handle Errors here.
           var errorCode = error.code;
           var errorMessage = error.message;
+          // ...
         });
+      },
+      logOut: function(){
+        $rootScope.auth.signOut().then(function() {
+          $rootScope.user = null;
+        }).catch(function(error) {
+          // An error happened.
+        });
+      },
+      isAdmin: function(){
+        var isAdmin = false;
+
+        var adminEmails = [
+          'lukembryan@gmail.com'
+        ];
+
+        if($rootScope.user) isAdmin = adminEmails.indexOf($rootScope.user.email) >= 0;
+
+        return isAdmin;
       }
     };
   })
@@ -249,7 +298,27 @@ angular.module('sous', [
 		}
 	})
 
-  .directive('recipePanel', function($timeout, $rootScope){
+  .directive('loginForm', function($timeout, $rootScope, authentication){
+		return {
+			restrict: 'E',
+			replace: true,
+			templateUrl: 'app/widget/login-form/login-form.html',
+			scope: true,
+			link: function(scope){
+        scope.login = {
+          credentials: {
+            email: '',
+            password: ''
+          },
+          submit: function(){
+            authentication.logIn(this.credentials);
+          }
+        };
+			}
+		};
+	})
+
+  .directive('recipePanel', function($rootScope, $timeout){
 		return {
 			restrict: 'E',
 			replace: true,
@@ -267,7 +336,7 @@ angular.module('sous', [
 		};
 	})
 
-  .directive('menuPanel', function($timeout, $rootScope, menu, findInArray){
+  .directive('menuPanel', function($rootScope, $timeout, menu, findInArray){
 		return {
 			restrict: 'E',
 			replace: true,

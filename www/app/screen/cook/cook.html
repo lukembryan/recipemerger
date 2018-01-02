@@ -1,5 +1,5 @@
 <div ng-controller="cookController" ng-init="ctrl.init()">
-  <div class="text-right">
+  <div class="text-right" ng-if="authentication.isAdmin()">
     <button class="btn" ng-click="ctrl.visualise = !ctrl.visualise">{{{true: 'Hide', false: 'Show'}[ctrl.visualise]}} Visualiser</button>
     <button class="btn" ng-click="ctrl.methodNavigate(-1)"><i class="fa fa-chevron-left"></i></button>
     <button class="btn" ng-click="ctrl.methodNavigate(1)"><i class="fa fa-chevron-right"></i></button>

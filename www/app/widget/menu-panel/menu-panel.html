@@ -1,5 +1,6 @@
-<div class="panel panel-bottom" ng-if="$root.showMenu">
-  <div class="inner container">
+<div class="panel panel-bottom">
+  <button class="btn btn-primary menu-toggle" ng-click="$root.showMenu = true" ng-cloak>Menu <span class="badge">{{$root.menu.recipes.length}}</span></button>
+  <div class="inner container" ng-if="$root.showMenu">
     <div class="row">
       <div class="emptycol-xs-12 col-sm-12 col-md-12 col-lg-12 text-center" ng-if="menuPanel.data.length === 0">
         no recipes in your menu

@@ -12,7 +12,7 @@
     <link rel="stylesheet" type="text/css" href="lib/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="lib/animate.css/animate.min.css">
 		<link rel="stylesheet" type="text/css" href="lib/angular-moment-picker/dist/angular-moment-picker.min.css">
-		<link rel="stylesheet" type="text/css" href="lib/firebaseui/dist/firebaseui.css" />
+		<!--<link rel="stylesheet" type="text/css" href="lib/firebaseui/dist/firebaseui.css" />-->
 
 		<link href="https://fonts.googleapis.com/css?family=Kanit:600|Titillium+Web|Dancing+Script:700" rel="stylesheet">
 
@@ -24,21 +24,21 @@
 		</div>
 		<menu-panel></menu-panel>
 		<recipe-panel></recipe-panel>
-		<button class="btn btn-primary menu-toggle" ng-click="$root.showMenu = true" ng-cloak>
-			<strong>MENU</strong>
-			<span class="badge">{{$root.menu.recipes.length}}</span>
-		</button>
 		<div class="overlay panel-overlay" ng-if="$root.showMenu" ng-click="$root.showMenu = false"></div>
 		<div class="overlay panel-overlay" ng-if="$root.currentRecipe" ng-click="$root.currentRecipe = null"></div>
 		<div class="container">
-			<h1>Sous</h1>
-			<h4>Multiple recipes, one method</h4>
-		  <ul class="nav nav-pills">
-		    <li role="presentation" ng-class="{'active': $root.state == 'home'}"><a href="/">Home</a></li>
-		    <li role="presentation" ng-class="{'active': $root.state == 'recipes'}"><a href="/recipes">Recipes</a></li>
-		    <li role="presentation" ng-class="{'active': $root.state == 'cook'}"><a href="/cook">Cook</a></li>
-		    <li role="presentation" ng-class="{'active': $root.state == 'admin'}"><a href="/admin">Admin</a></li>
-		  </ul>
+			<header class="row">
+				<div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+					<h1>Sous</h1>
+				</div>
+				<div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+					<ul class="nav nav-pills pull-right">
+						<li role="presentation" ng-class="{'active': $root.state == 'how-it-works'}"><a href="/">How It Works</a></li>
+						<li role="presentation" ng-class="{'active': $root.state == 'recipes'}"><a href="/recipes">Recipes</a></li>
+						<li role="presentation" ng-class="{'active': $root.state == 'cook'}"><a href="/cook">Cook</a></li>
+					</ul>
+				</div>
+			</header>
 			<article ui-view ng-cloak></article>
 		</div>
 
@@ -59,11 +59,11 @@
 
     <script type="text/javascript" src="app/app.js"></script>
 
-    <script type="text/javascript" src="app/screen/home/home.controller.js"></script>
+    <script type="text/javascript" src="app/screen/how-it-works/how-it-works.controller.js"></script>
     <script type="text/javascript" src="app/screen/recipes/recipes.controller.js"></script>
     <script type="text/javascript" src="app/screen/cook/cook.controller.js"></script>
     <script type="text/javascript" src="app/screen/admin/admin.controller.js"></script>
 
-		<script type="text/javascript" src="lib/firebaseui/dist/firebaseui.js"></script>
+		<!--<script type="text/javascript" src="lib/firebaseui/dist/firebaseui.js"></script>-->
 	</body>
 </html>

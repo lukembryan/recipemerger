@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('sous')
-	.controller('adminController', function($scope, $rootScope, $state, $timeout, recipes, findInArray) {
+	.controller('adminController', function($scope, $rootScope, $state, $timeout, authentication, recipes, findInArray) {
     $scope.ctrl = {
 			recipe: null,
 			edit: {
