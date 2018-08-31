@@ -121,8 +121,6 @@ angular.module('sous', [
                   $rootScope.user = null;
                 }
               }, 0);
-
-              console.log('$rootScope.user', $rootScope.user);
             });
           }else{
             $rootScope.auth.signInAnonymously().catch(function(error){

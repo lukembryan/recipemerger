@@ -1,11 +1,14 @@
 <div ng-controller="cookController" ng-init="ctrl.init()">
   <div class="text-right" ng-if="authentication.isAdmin()">
     <button class="btn" ng-click="ctrl.visualise = !ctrl.visualise">{{{true: 'Hide', false: 'Show'}[ctrl.visualise]}} Visualiser</button>
-    <button class="btn" ng-click="ctrl.methodNavigate(-1)"><i class="fa fa-chevron-left"></i></button>
-    <button class="btn" ng-click="ctrl.methodNavigate(1)"><i class="fa fa-chevron-right"></i></button>
+    <div>Start: {{ctrl.methodStart === null ? 'Now' : ctrl.methodStart}}</div>
+    <div>Finish: {{ctrl.methodFinish}}</div>
     <hr class="short" />
   </div>
   <div ng-if="!ctrl.visualise && ctrl.mergedMethod.length > 0">
+    <button class="cook-control" ng-click="ctrl.methodNavigate(-1)"><i class="fa fa-fw fa-chevron-left"></i></button>
+    <button class="cook-control" ng-click="ctrl.toggleCooking()"><i class="fa fa-fw" ng-class="{'fa-play': !ctrl.cooking, 'fa-pause': ctrl.cooking}"></i></button>
+    <button class="cook-control" ng-click="ctrl.methodNavigate(1)"><i class="fa fa-fw fa-chevron-right"></i></button>
     <h3 ng-if="ctrl.currentMethodStep === -1">Not Started Yet</h3>
     <h3 ng-if="ctrl.currentMethodStep === ctrl.mergedMethod.length">Finished</h3>
     <div class="row" ng-repeat="step in ctrl.mergedMethod" ng-if="ctrl.currentMethodStep === $index">
@@ -44,6 +47,9 @@
       <button class="btn" ng-click="ctrl.stepThrough()">{{{true: 'Next Overlap Scan', false: 'Fix Overlap'}[!ctrl.stepToHold]}}</button>
       <button class="btn" ng-click="ctrl.merge()">Merge All</button>
       <button class="btn" ng-click="ctrl.init(true)">Reset</button>
+      <button class="btn" ng-click="ctrl.methodNavigate(-1)"><i class="fa fa-fw fa-chevron-left"></i></button>
+      <button class="btn" ng-click="ctrl.toggleCooking()"><i class="fa fa-fw" ng-class="{'fa-play': !ctrl.cooking, 'fa-pause': ctrl.cooking}"></i></button>
+      <button class="btn" ng-click="ctrl.methodNavigate(1)"><i class="fa fa-fw fa-chevron-right"></i></button>
     </div>
     <table class="table table-responsive logic">
       <thead>
@@ -52,19 +58,23 @@
           <th ng-repeat="recipe in ctrl.recipes">
             <h4>{{recipe.name}}</h4>
             <div>{{recipe.servingTime}}</div>
+            <div>{{$root.menu.recipes[$index].servingTime}}</div>
           </th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td class="scale">
-            <div class="increment" ng-style="{'top': (increment*4)-ctrl.scaleIncrement*2 + 'px'}" ng-repeat="increment in ctrl.scale track by $index">
-              <span class="value">{{ctrl.scaleLabel(increment)}}</span>
-              <span class="marker">- {{$index*5}}</span>
+          <td>
+            <div class="scale">
+              <div class="increment" ng-style="{'top': (increment*4)-ctrl.scaleIncrement*2 + 'px'}" ng-repeat="increment in ctrl.scale track by $index">
+                <span class="value">{{ctrl.scaleLabel(increment)}}</span>
+                <span class="marker">- {{increment}}</span>
+              </div>
+              <div class="line" ng-style="{'top': (increment*4)-ctrl.scaleIncrement*2 + 'px'}" ng-repeat="increment in ctrl.scale track by $index"></div>
             </div>
           </td>
           <td style="position: relative;" ng-repeat="recipe in ctrl.recipes">
-            <div ng-style="step.position" class="step" ng-class="{'parallel': step.parallel, 'merged': step.merged, 'hold': ctrl.isStepToHold(step), 'overlap': ctrl.isOverlap(step), 'current': ctrl.isCurrentStep(step)}" ng-repeat="step in recipe.steps" uib-tooltip="{{$index+1}} ({{step.offset}}-{{recipe.steps[0].offset + step.end}}) : '{{step.description}}'">
+            <div ng-hide="ctrl.isCompleted(step) && step.offset < 0" ng-style="step.position" class="step" ng-class="{'parallel': step.parallel, 'merged': step.merged, 'hold': ctrl.isStepToHold(step), 'overlap': ctrl.isOverlap(step), 'current': ctrl.isCurrentStep(step), 'completed': ctrl.isCompleted(step), 'issue': ctrl.isIssue(step)}" ng-repeat="step in recipe.steps" uib-tooltip="{{$index+1}} ({{step.offset}}-{{recipe.steps[0].offset + step.end}}) - {{step.duration + step.setupDuration}}m : '{{step.description}}'">
               <div ng-if="!step.parallel"></div>
               <div ng-if="step.parallel">
                 <div ng-style="ctrl.stepComponent(step, true)" class="setup"></div>

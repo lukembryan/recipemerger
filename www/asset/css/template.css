@@ -96,9 +96,6 @@ h5 {
   color: #fff;
   margin-top: -10px;
 }
-.menu-toggle {
-  width: 100%;
-}
 .menu-toggle .badge {
   margin: 0 2px 0 5px;
 }
@@ -110,18 +107,32 @@ h5 {
   border: 1px solid #0F454F;
   /*
   &.merged {
-    border-color: #333;
     background-color: #ccc;
+    border-color: #333;
     .setup {
       background-color: lighten(#ccc, 10%);
     }
   }
   */
 }
+.step.completed {
+  background-color: #ccc;
+  border: 1px solid #333;
+}
+.step.issue {
+  border-color: red !important;
+}
 .step.parallel {
   margin-left: 50%;
   background-color: #FFD7AA;
   border: 1px solid #AA7539;
+}
+.step.parallel.completed {
+  background-color: #ccc;
+  border: 1px solid #333;
+}
+.step.parallel.completed .setup {
+  background-color: #e6e6e6;
 }
 .step.parallel .setup {
   background-color: #ffefdd;
@@ -148,12 +159,25 @@ h5 {
   background-color: #9999ff;
 }
 .scale {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  font-weight: bold;
+  color: black;
 }
 .scale .increment {
   position: absolute;
   width: 100%;
-  background-color: white;
+  font-size: 0.5em;
+  line-height: 2.7em;
+}
+.scale .line {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 9px;
+  border-bottom: 1px dashed #999;
 }
 .uib-time input,
 .uib-time button {
@@ -277,6 +301,21 @@ hr.spacer {
 }
 .btn {
   border-radius: 0;
+}
+button.cook-control {
+  font-size: 4em;
+}
+button.cook-control > .fa-chevron-left {
+  color: red;
+}
+button.cook-control > .fa-play {
+  color: green;
+}
+button.cook-control > .fa-pause {
+  color: red;
+}
+button.cook-control > .fa-chevron-right {
+  color: green;
 }
 .empty {
   text-decoration: center;

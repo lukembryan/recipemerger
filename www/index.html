@@ -37,6 +37,7 @@
 						<li role="presentation" ng-class="{'active': $root.state == 'recipes'}"><a href="/recipes">Recipes</a></li>
 						<li role="presentation" ng-class="{'active': $root.state == 'cook'}"><a href="/cook">Cook</a></li>
 					</ul>
+					<button class="btn btn-primary menu-toggle" ng-click="$root.showMenu = true" ng-cloak>Menu <span class="badge">{{$root.menu.recipes.length}}</span></button>
 				</div>
 			</header>
 			<article ui-view ng-cloak></article>

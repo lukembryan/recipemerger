@@ -8,9 +8,11 @@ angular.module('sous')
 			method: [],
 			mergedMethod: [],
 			currentMethodStep: -1,
+			cooking: false,
 			scale: [],
 			scaleIncrement: 5,
-			servingTimes: {},
+			methodStart: null,
+			methodFinish: null,
 			minFinishTime: null,
 			holdCandidates: [],
 			stepToHold: null,
@@ -22,7 +24,7 @@ angular.module('sous')
 				var ctrl = this;
 				ctrl.recipes = [];
 
-				$rootScope.loading = { show: true, label: 'merging recipes' };
+				//if(force) $rootScope.loading = { show: true, label: 'merging recipes' };
 
 				if($rootScope.recipes){
 					angular.forEach($rootScope.menu.recipes, function(recipe){
@@ -40,29 +42,29 @@ angular.module('sous')
 					}, false);
 				}
 
-				ctrl.buildRecipes(force);
+				//ctrl.buildRecipes(force);
+				ctrl.buildRecipes();
 			},
 			buildRecipes: function(forceMerge){
-				var ctrl = this, end = 0;
+				var ctrl = this;
 
 				var setIndexes = function(step, stepIndex, recipe, recipeIndex){
 					step.index = stepIndex;
 					step.recipe = recipeIndex;
 				};
 
-				var position = function(step, stepIndex, recipe){
+				var setStepPositions = function(step, stepIndex, recipe){
 					step = ctrl.stepPosition(step, stepIndex, recipe);
 				};
 
-				var stepEnd = function(step, stepIndex, recipe){
+				var calcRecipeEnds = function(step, stepIndex, recipe){
 					if(recipe.end === undefined) recipe.end = 0;
-					if(step.end > end) end = step.end;
-					if(end > recipe.end) recipe.end = end;
+					if(step.end > recipe.end) recipe.end = step.end;
 				};
 
 				ctrl.processRecipe(setIndexes);
-				ctrl.processRecipe(position);
-				ctrl.processRecipe(stepEnd);
+				ctrl.processRecipe(setStepPositions);
+				ctrl.processRecipe(calcRecipeEnds);
 
 				ctrl.buildScale();
 				ctrl.setupMethod();
@@ -81,30 +83,65 @@ angular.module('sous')
 				$rootScope.loading = { show: false, label: '' };
 			},
 			buildScale: function(update){
-				var ctrl = this, start = 0, finish = 0;
+				var ctrl = this, start = 0, finish = 0, updateTimer;
 
-				var findEnds = function(step, stepIndex, recipe){
+				var findFinish = function(step, stepIndex, recipe, recipeIndex){
 					var stepFinish = step.end + recipe.steps[0].offset;
-					var stepStart = stepFinish - step.duration - step.setupDuration;
-					if(stepStart < start) start = stepStart;
 					if(stepFinish > finish) finish = stepFinish;
 
 					if(stepIndex == recipe.steps.length-1){
 						var finishTime = moment().add(finish, 'minutes');
-						var minute = Math.ceil(finishTime.minute()/5)*5;
-						if(minute == 60) minute = 0;
-						finishTime = finishTime.set('minute', minute);
-						if(minute == 0) finishTime.add(1, 'hour');
-						if(!update) recipe.servingTime = finishTime.format('Do MMM, hh:mm a');
+						//if(!update) recipe.servingTime = finishTime.format('Do MMM, hh:mm a');
+						recipe.servingTime = finishTime.format('Do MMM, hh:mm a');
 					}
 				};
 
-				ctrl.processRecipe(findEnds);
+				var findRecipeFinishes = function(recipe, recipeIndex){
+					var lastStep = recipe.steps[recipe.steps.length - 1];
+					var recipeFinish = lastStep.end + recipe.steps[0].offset;
 
-				ctrl.scale = [];
-				for(var i = 0; i*ctrl.scaleIncrement <= finish; i++){
-					ctrl.scale.push(i*ctrl.scaleIncrement);
+					var finishTime = moment().add(recipeFinish, 'minutes');
+					recipe.servingTime = finishTime.format('Do MMM, hh:mm a');
+				};
+
+				var findStart = function(recipe, recipeIndex){
+					if(recipe.offset !== null){
+						if(recipe.offset < start) start = recipe.offset;
+					}
+				};
+
+				ctrl.processRecipe(findFinish);
+				ctrl.processRecipe(null, findRecipeFinishes);
+
+				start = finish;
+				ctrl.processRecipe(null, findStart);
+
+				ctrl.methodStart = start === 0 ? null : moment().add(start, 'minutes').format('Do MMM, hh:mm a');
+				ctrl.methodFinish = moment().add(finish, 'minutes').format('Do MMM, hh:mm a');
+
+				ctrl.scale = [0];
+
+				var minute = moment().minute(), scaleOffset = 0;
+				if(minute % 5 > 0) scaleOffset = 5 - (minute % 5);
+
+				for(var i = 1; i*ctrl.scaleIncrement <= (finish + ctrl.scaleIncrement); i++){
+					if(scaleOffset > 0){
+						if(i === 1){
+							ctrl.scale.push(scaleOffset);
+						}else{
+							var adjustedIndex = i - 1;
+							var minuteMark = (adjustedIndex*ctrl.scaleIncrement) + scaleOffset;
+							ctrl.scale.push(minuteMark);
+						}
+					}else{
+						ctrl.scale.push(i*ctrl.scaleIncrement);
+					}
 				}
+
+				if(updateTimer) $timeout.cancel(updateTimer);
+				updateTimer = $timeout(function(){
+					ctrl.buildScale(true);
+				}, 5000);
 			},
 			setupMethod: function(){
 				var ctrl = this;
@@ -239,19 +276,43 @@ angular.module('sous')
 				var ctrl = this, overlapDuration = 0;
 				if(ctrl.stepToHold) overlapDuration = angular.copy(ctrl.stepToHold.duration);
 
+				// remove hold recipe steps from allowed overlap duration
 				angular.forEach(ctrl.sameRecipeOverlaps, function(step){
 					overlapDuration -= step.duration;
 				});
 
+				// sort remaining hold candidates longest to shortest duration
 				ctrl.holdCandidates.sort(function(a, b){ return new Date(b.duration) - new Date(a.duration); });
 
 				angular.forEach(ctrl.holdCandidates, function(holdCandidate, index){
 					if(ctrl.stepToHold.parallel && !holdCandidate.parallel && holdCandidate.duration <= overlapDuration){
+						// holding parallel step, remaining hold candidate is not parallel and is within the remaining allowed overlap duration
 						holdCandidate.allowOverlap = true;
 						holdCandidate.overlapOffset = 0;
-						var previous = ctrl.holdCandidates[index-1];
-						if(index > 0 && previous.allowOverlap) holdCandidate.overlapOffset = previous.duration;
-						overlapDuration -= holdCandidate.duration;
+
+						angular.forEach(ctrl.holdCandidates, function(otherHoldCandidate){
+							if(otherHoldCandidate.otherAllowedOverlaps){
+								angular.forEach(otherHoldCandidate.otherAllowedOverlaps, function(otherAllowedOverlap){
+										holdCandidate.overlapOffset += ctrl.recipes[otherHoldCandidate.recipe].steps[otherAllowedOverlap].duration;
+								});
+							}
+						});
+
+						var stopOverlapping = false;
+
+						for(var stepIndex = ctrl.recipes[holdCandidate.recipe].steps.length - 1; stepIndex >= 0; stepIndex--){
+							var holdCandidateStep = ctrl.recipes[holdCandidate.recipe].steps[stepIndex];
+
+							if(holdCandidateStep.index <= holdCandidate.index && !stopOverlapping){
+								if(overlapDuration >= holdCandidateStep.duration && !holdCandidateStep.parallel){
+									overlapDuration -= holdCandidateStep.duration;
+									if(!holdCandidate.otherAllowedOverlaps) holdCandidate.otherAllowedOverlaps = [];
+									holdCandidate.otherAllowedOverlaps.push(stepIndex);
+								}else{
+									stopOverlapping = true;
+								}
+							}
+						}
 					}
 
 					if(!ctrl.stepToHold.parallel && holdCandidate.parallel){
@@ -260,42 +321,114 @@ angular.module('sous')
 					}
 				});
 
+				ctrl.overlaps.sort(function(a, b){ return new Date(b.duration) - new Date(a.duration); });
+
 				angular.forEach(ctrl.overlaps, function(step){
 					var recipe = ctrl.recipes[step.recipe];
 					var ends = ctrl.calculateEnds(step, ctrl.stepToHold, recipe);
-					var offset = -ends.methodStep.duration + (ends.methodStep.finish - ends.step.finish);
+					var offset = ends.methodStep.duration - (ends.methodStep.finish - ends.step.finish);
 					var allowOverlap = false;
+					var otherAllowedOverlaps = [];
 					var allowParallelOverlap = false;
 					var overlapOffset = 0;
 
 					angular.forEach(ctrl.holdCandidates, function(holdCandidate){
 						if(holdCandidate.recipe == step.recipe && holdCandidate.index == step.index){
 							if(holdCandidate.allowOverlap) allowOverlap = true;
+							if(holdCandidate.otherAllowedOverlaps) otherAllowedOverlaps = holdCandidate.otherAllowedOverlaps;
 							if(holdCandidate.allowParallelOverlap) allowParallelOverlap = true;
-							overlapOffset = holdCandidate.overlapOffset;
+							overlapOffset = holdCandidate.overlapOffset !== undefined ? holdCandidate.overlapOffset : 0;
 						}
 					});
 
 					for(var stepIndex = recipe.steps.length - 1; stepIndex >= 0; stepIndex--){
 						var stepToMove = recipe.steps[stepIndex];
+						var currentEnds = ctrl.calculateEnds(stepToMove, ctrl.stepToHold, ctrl.recipes[stepToMove.recipe]);
+						var id = (stepToMove.recipe+1) + ':' + (stepToMove.index+1);
 
 						if(allowOverlap){
+							// step can overlap held parallel step
 							if(stepIndex == step.index){
-								offset += stepToMove.duration;
+								// step in overlapping step's recipe is the overlapping step
 								stepToMove.offset -= overlapOffset;
-								stepToMove.end -= (step.index == 0 ? 0 : offset);
 								stepToMove.merged = true;
 							}else{
-								if(stepIndex <= step.index){
-									if(offset == 0) offset = -ends.methodStep.duration;
-									stepToMove.offset += offset;
-									stepToMove.position.top = stepToMove.offset*4 + 'px';
+								if(stepIndex < step.index){
+									// step in overlapping step's recipe is before overlapping step
+									if(!stepToMove.parallel && otherAllowedOverlaps.indexOf(stepToMove.index) >= 0){
+										// not a parallel step & overlap space remaining
+										//overlapOffset += stepToMove.duration;
+										stepToMove.offset -= overlapOffset;
+										stepToMove.end -= overlapOffset;
+										stepToMove.merged = true;
+									}else{
+										// can't overlap this step
+										console.log(id, 'before overlapping step, cannot overlap');
+										//overlapOffset -= ends.methodStep.duration;
+										//stepToMove.offset -= overlapOffset;
+										if(stepToMove.index === 0) stepToMove.offset -= currentEnds.step.finish - currentEnds.methodStep.start;
+										stepToMove.end -= currentEnds.step.finish - currentEnds.methodStep.start;
+										stepToMove.position.top = stepToMove.offset*4 + 'px';
+									}
 								}else{
-									var adjustedOffset = ends.step.start - ends.methodStep.start;
-									stepToMove.end += adjustedOffset;
+									// step in overlapping step's recipe is after overlapping step
+									console.log(id, 'after overlapping step');
+									console.log('stepToMove.end', stepToMove.end);
+									console.log('overlapOffset', overlapOffset);
+									stepToMove.end += overlapOffset;
 								}
 							}
 						}else{
+							// step can't overlap held step
+							if(!allowParallelOverlap){
+								if(stepIndex <= step.index){
+									// step in overlapping step's recipe is before or equal to overlapping step
+									stepToMove.offset -= offset;
+									stepToMove.position.top = stepToMove.offset*4 + 'px';
+								}else{
+									// step in overlaping step's recipe is after overlapping step
+									stepToMove.end += offset;
+								}
+							}
+						}
+
+						/*
+						if(allowOverlap){
+							// step can overlap held parallel step
+							if(stepIndex == step.index){
+								// step in overlapping step's recipe is the overlapping step
+								console.log(id, 'overlapping step');
+
+								offset += stepToMove.duration;
+								stepToMove.offset -= overlapOffset;
+								stepToMove.end = (step.index == 0 ? 0 : offset) + overlapOffset;
+								overlapDuration -= stepToMove.duration;
+								stepToMove.merged = true;
+							}else{
+								if(stepIndex < step.index){
+									// step in overlapping step's recipe is before overlapping step
+									console.log(id, 'before overlapping step');
+									if(!stepToMove.parallel && overlapDuration > stepToMove.duration){
+										overlapDuration -= stepToMove.duration;
+										stepToMove.merged = true;
+										offset += stepToMove.duration;
+									}else{
+										if(offset == 0) offset = -ends.methodStep.duration;
+										stepToMove.offset += offset;
+										stepToMove.position.top = stepToMove.offset*4 + 'px';
+									}
+								}else{
+									// step in overlapping step's recipe is after overlapping step
+									console.log(id, 'after overlapping step');
+
+									console.log('overlapping step start', ends.step.start, 'hold step start', ends.methodStep.start);
+
+									var adjustedOffset = ends.step.start - ends.methodStep.start;
+									if(step.index > 0) stepToMove.end += adjustedOffset;
+								}
+							}
+						}else{
+							// step can't overlap held step
 							if(!allowParallelOverlap){
 								if(stepIndex <= step.index){
 									if(offset == 0) offset = -ends.methodStep.duration;
@@ -306,15 +439,50 @@ angular.module('sous')
 								}
 							}
 						}
+						*/
 					}
 				});
 
 				if(ctrl.stepToHold) ctrl.recipes[ctrl.stepToHold.recipe].steps[ctrl.stepToHold.index].merged = true;
 
+				ctrl.adjustRecipesOnScale();
+
+				ctrl.buildScale(true);
+				ctrl.setupMethod();
+
+				ctrl.holdCandidates = [];
+				ctrl.stepToHold = null;
+				ctrl.overlaps = [];
+
+				if(loopThrough) ctrl.scanForOverlaps(loopThrough);
+			},
+			adjustRecipesOnScale: function(move){
+				var ctrl = this;
+
 				function calculateAdjustment(){
 					var adjust = 0;
 					ctrl.processRecipe(function(step, stepIndex, recipe, recipeIndex){
-						if(step.offset < 0 && step.offset < adjust) adjust = step.offset;
+						var stepCompleted, previousStepCompleted;
+
+						if(move === undefined || move === -1){
+							stepCompleted = $rootScope.menu.recipes[recipeIndex].currentStep > stepIndex;
+
+							if(stepCompleted){
+								if(step.offset > 0 && step.offset > adjust) adjust = step.offset;
+							}else{
+								if(step.offset < 0 && step.offset < adjust) adjust = step.offset;
+							}
+						}else{
+							/*
+							var previousStep = ctrl.mergedMethod[ctrl.currentMethodStep - 1];
+
+							if(previousStep){
+								if(previousStep.offset === 0){
+									adjust = previousStep.parallel ? previousStep.setupDuration : previousStep.duration;
+								}
+							}
+							*/
+						}
 					});
 
 					return -adjust;
@@ -326,16 +494,6 @@ angular.module('sous')
 					ctrl.moveRecipe(recipeIndex, adjustRecipes);
 					recipe.offset = recipe.steps[0].offset;
 				});
-
-				ctrl.buildScale(true);
-				ctrl.setupMethod();
-
-				ctrl.holdCandidates = [];
-				ctrl.stepToHold = null;
-				ctrl.overlaps = [];
-
-
-				if(loopThrough) ctrl.scanForOverlaps(loopThrough);
 			},
 			processMergedMethod: function(){
 				var ctrl = this;
@@ -368,6 +526,7 @@ angular.module('sous')
 				if(finishedRecipes === $rootScope.menu.recipes.length) ctrl.currentMethodStep = ctrl.mergedMethod.length;
 			},
 			calculateEnds: function(step, methodStep, recipe){
+				var ctrl = this;
 				var ends = {
 					step: {
 						duration: step.duration,
@@ -414,12 +573,7 @@ angular.module('sous')
 					if(stepFinish > finish) finish = stepFinish;
 				});
 
-				var minute = ctrl.roundToFive(moment().minute());
-				if(minute == 60) minute = 0;
-				var time = moment().set('minute', minute);
-				if(minute == 0) time.add(1, 'hour');
-
-				var newFinish = ctrl.roundToFive(moment(recipe.servingTime, 'Do MMM, hh:mm a').diff(time, 'minutes'));
+				var newFinish = moment(recipe.servingTime, 'Do MMM, hh:mm a').diff(moment(), 'minutes');
 				var offset = newFinish - finish;
 
 				ctrl.moveRecipe(foundRecipe, offset);
@@ -439,14 +593,14 @@ angular.module('sous')
 				return overlapFound;
 			},
 			stepPosition: function(step, index, recipe){
+				var multiplier = 4;
 				var position = {height: 0, top: 0};
+				if(step.offset === undefined) step.offset = 0;
 
 				var previousStep = index > 0 ? recipe.steps[index-1] : null;
 
-				if(step.offset === undefined) step.offset = 0;
-
-				if(!step.parallel) position.height = step.duration*4 + 'px';
-				else position.height = (step.duration + step.setupDuration)*4 + 'px';
+				if(!step.parallel) position.height = step.duration*multiplier + 'px';
+				else position.height = (step.duration + step.setupDuration)*multiplier + 'px';
 
 				if(previousStep){
 					step.offset += previousStep.offset;
@@ -454,7 +608,6 @@ angular.module('sous')
 					if(previousStep.parallel){
 						step.offset += previousStep.setupDuration;
 						if(step.dependsOn || step.parallel) step.offset += previousStep.duration;
-						position.top = step.offset*4 + 'px';
 					}else{
 						if(step.dependsOn){
 							var finish = 0;
@@ -470,8 +623,8 @@ angular.module('sous')
 						}else{
 							step.offset += previousStep.duration;
 						}
-						position.top = step.offset*4 + 'px';
 					}
+					position.top = step.offset*multiplier + 'px';
 				}
 
 				step.position = position;
@@ -491,10 +644,7 @@ angular.module('sous')
 				return styles;
 			},
 			scaleLabel: function(increment){
-				var minute = this.roundToFive(moment().minute());
-				if(minute == 60) minute = 0;
-				var time = moment().set('minute', minute);
-				if(minute == 0) time.add(1, 'hour');
+				var time = moment();
 				return time.add(increment, 'minutes').format('hh:mm');
 			},
 			isCurrentStep: function(step){
@@ -508,6 +658,24 @@ angular.module('sous')
 				}
 
 				return isCurrentStep;
+			},
+			isCompleted: function(step){
+				var ctrl = this, isCompleted = false, currentStep = -1;
+
+				var recipe = findInArray($rootScope.menu.recipes, 'id', ctrl.recipes[step.recipe].id);
+
+				if(recipe !== null) currentStep = $rootScope.menu.recipes[recipe].currentStep;
+
+				if(currentStep > step.index) isCompleted = true;
+
+				return isCompleted;
+			},
+			isIssue: function(step){
+				var ctrl = this;
+
+				var isIssue = (ctrl.recipes[step.recipe].steps[0].offset + step.end - step.offset) !== step.duration + step.setupDuration;
+
+				return isIssue;
 			},
 			processRecipe: function(stepAction, recipeAction){
 				var ctrl = this;
@@ -538,19 +706,28 @@ angular.module('sous')
 						if(previousRecipe) previousRecipe.currentStep++;
 						if(recipe && recipe.currentStep === -1) recipe.currentStep++;
 					}else{
+						var sameRecipe = false;
+						if(recipe && previousRecipe) sameRecipe = recipe.id === previousRecipe.id;
+
 						if(recipe) recipe.currentStep--;
-						else previousRecipe.currentStep--;
-						if(previousRecipe && previousRecipe.currentStep === ctrl.recipes[ctrl.mergedMethod[previousMethodStep].recipe].steps.length) previousRecipe.currentStep--;
-						if(previousRecipe && previousRecipe.currentStep === 0) previousRecipe.currentStep = -1;
+						if(previousRecipe && !sameRecipe){
+							if(previousRecipe.currentStep === ctrl.recipes[ctrl.mergedMethod[previousMethodStep].recipe].steps.length) previousRecipe.currentStep--;
+							if(previousRecipe.currentStep === 0) previousRecipe.currentStep = -1;
+						}
 					}
 
 					ctrl.activeIngredientsTab = 0;
 
 					menu.save();
+
+					ctrl.adjustRecipesOnScale(move);
+					ctrl.buildScale(true);
+					ctrl.setupMethod();
 				}
 			},
-			roundToFive: function(number){
-				return Math.ceil(number/5)*5
+			toggleCooking: function(){
+				var ctrl = this;
+				ctrl.cooking = !ctrl.cooking;
 			}
 		};
 
@@ -558,6 +735,12 @@ angular.module('sous')
 			$scope.ctrl.init();
 			$scope.ctrl.servingTimeChange(data);
 			$scope.ctrl.merge();
+
+			angular.forEach($rootScope.menu.recipes, function(recipe){
+				recipe.currentStep = -1;
+			});
+
+			$scope.ctrl.currentMethodStep = -1;
 		});
 
 		$rootScope.$on('recipeRemoved', function(event, recipe){

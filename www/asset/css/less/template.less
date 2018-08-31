@@ -114,7 +114,6 @@ h2, h3, h4, h5 {
 }
 
 .menu-toggle {
-  width: 100%;
   .badge {
     margin: 0 2px 0 5px;
   }
@@ -126,18 +125,32 @@ h2, h3, h4, h5 {
   width: 50%;
   background-color: lighten(#6A959D, 25%);
   border: 1px solid #0F454F;
+  &.completed {
+    background-color: #ccc;
+    border: 1px solid #333;
+  }
+  &.issue {
+    border-color: red !important;
+  }
   &.parallel {
     margin-left: 50%;
     background-color: #FFD7AA;
     border: 1px solid #AA7539;
+    &.completed {
+      background-color: #ccc;
+      border: 1px solid #333;
+      .setup {
+        background-color: lighten(#ccc, 10%);
+      }
+    }
     .setup {
       background-color: lighten(#FFD7AA, 10%);
     }
   }
   /*
   &.merged {
-    border-color: #333;
     background-color: #ccc;
+    border-color: #333;
     .setup {
       background-color: lighten(#ccc, 10%);
     }
@@ -167,11 +180,24 @@ h2, h3, h4, h5 {
 }
 
 .scale {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  font-weight: bold;
+  color: black;
   .increment {
     position: absolute;
     width: 100%;
-    background-color: white;
+    font-size: 0.5em;
+    line-height: 2.7em;
+  }
+  .line {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 9px;
+    border-bottom: 1px dashed #999;
   }
 }
 
@@ -320,6 +346,24 @@ hr {
 
 .btn {
   border-radius: 0;
+}
+
+button {
+  &.cook-control {
+    font-size: 4em;
+    > .fa-chevron-left {
+      color: red;
+    }
+    > .fa-play {
+      color: green;
+    }
+    > .fa-pause {
+      color: red;
+    }
+    > .fa-chevron-right {
+      color: green;
+    }
+  }
 }
 
 .empty {
