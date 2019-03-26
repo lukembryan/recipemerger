@@ -123,5 +123,10 @@
       }
     }
   },
-  "defaultProject": "sous"
+  "defaultProject": "sous",
+  "schematics": {
+    "@schematics/angular:component": {
+      "styleext": "less"
+    }
+  }
 }
