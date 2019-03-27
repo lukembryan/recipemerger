@@ -3,11 +3,13 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { TemplateHeaderComponent } from './template-header/template-header.component';
+import { RecipeMasonryComponent } from './recipe-masonry/recipe-masonry.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    TemplateHeaderComponent
+    TemplateHeaderComponent,
+    RecipeMasonryComponent
   ],
   imports: [
     BrowserModule

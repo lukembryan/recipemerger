@@ -6,10 +6,10 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./template-header.component.less']
 })
 export class TemplateHeaderComponent implements OnInit {
-
+  title = 'sous';
+  
   constructor() { }
 
   ngOnInit() {
   }
-
 }
