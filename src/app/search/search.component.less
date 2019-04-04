@@ -1,14 +1,23 @@
+@import "../../assets/css/less/shared.less";
+
 form {
   display: inline-block;
-  margin-left: 50px;
   font-size: 1.8em;
-  > i {
-    margin-right: 20px;
+  .screen-xxs-max({
+    display: none;
+  });
+  > i.fa-search {
+    margin-right: 15px;
+    font-size: 0.8em;
+    vertical-align: top;
+    line-height: 1.4;
   }
   > input {
     background-color: transparent;
     border: none;
     padding: 0;
+    vertical-align: top;
+    margin-top: -6px;
     &:focus {
       outline: none;
     }

@@ -1,0 +1,9 @@
+<section>
+  <search></search>
+  <h1><a routerLink="/">sous</a></h1>
+  <ul class="menu landing-panel">
+    <li routerLinkActive="active" *ngFor="let option of options">
+      <a routerLink="{{option.route}}">{{option.label}}</a>
+    </li>
+  </ul>
+</section>

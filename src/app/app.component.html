@@ -1,6 +1,6 @@
 <!--The content below is only a placeholder and can be replaced.-->
-<div>
-  <header></header>
-  <menu></menu>
-  <!--<recipe-masonry></recipe-masonry>-->
+<div id="template">
+  <header *ngIf="route != '/'"></header>
+  <menu *ngIf="route != '/'"></menu>
+  <router-outlet></router-outlet>
 </div>
