@@ -1,13 +1,30 @@
-import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
-import store from './store'
-import './registerServiceWorker'
+import Vue from 'vue';
+import app from './app.vue';
+import router from './router';
+import store from './store';
+import './registerServiceWorker';
 
-Vue.config.productionTip = false
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import {
+  faSearch, faBars, faTimes, faEdit, faPlus,
+  faToggleOn, faToggleOff, faCheck
+} from '@fortawesome/pro-light-svg-icons';
+
+library.add(
+  faSearch, faBars, faTimes, faEdit, faPlus,
+  faToggleOn, faToggleOff, faCheck
+);
+
+Vue.component('font-awesome-icon', FontAwesomeIcon);
+
+Vue.config.productionTip = false;
 
 new Vue({
   router,
   store,
-  render: h => h(App)
-}).$mount('#app')
+  render: h => h(app),
+  mounted: function(){
+    store.dispatch('initAuth');
+  }
+}).$mount('#app');

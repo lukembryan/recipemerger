@@ -1,18 +1,103 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div class="home content">
+    <section>
+      <search />
+      <h1>
+        <img src="img/logo.png" />
+        <span>sizzle</span>
+      </h1>
+      <div class="menu landing-panel">
+        <ul>
+          <li v-for="option in options">
+            <router-link :to="option.path">{{option.label}}</router-link>
+          </li>
+        </ul>
+      </div>
+    </section>
+    <recipe-masonry layout="right" />
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
+import search from '@/components/search.vue';
+import recipeMasonry from '@/components/recipe-masonry.vue';
 
 export default {
   name: 'home',
   components: {
-    HelloWorld
+    search,
+    recipeMasonry
+  },
+  data: function(){
+    return {
+      options: [
+        {
+          label: 'browse recipes',
+          path: '/browse'
+        },
+        {
+          label: 'cook',
+          path: '/cook'
+        },
+        {
+          label: 'how it works',
+          path: '/how-it-works'
+        }
+      ]
+    };
   }
 }
 </script>
+
+<style scoped lang="less">
+@import '../assets/less/shared.less';
+
+.home {
+  display: grid;
+  grid-template-rows: 100%;
+  position: relative;
+  > p {
+    grid-row-start: 1;
+    grow-row-end: 2;
+    padding: 20px;
+  }
+  > .recipe-masonry {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 2;
+    grid-column-end: 3;
+  }
+  grid-column-start: 1;
+  > section {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    height: 100%;
+    width: 40%;
+    padding: 0 50px 50px;
+    > h1 {
+      font-size: 4em;
+      margin: 40px 0 20px;
+      width: 100%;
+      line-height: 1;
+      color: lighten(@brown, 20%);
+      > img {
+        height: 50px;
+        margin-right: 20px;
+      }
+    }
+    > ul {
+      &.landing-panel {
+        > li {
+          text-align: left;
+          > a {
+            &:hover {
+              padding-left: 5px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</style>
