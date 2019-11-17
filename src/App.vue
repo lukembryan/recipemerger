@@ -14,6 +14,10 @@
             <li v-for="link in menu" v-bind:class="{'active': link.path == '/' + page}" v-bind:key="link.path">
               <router-link :to="link.path">{{link.label}}</router-link>
             </li>
+            <li v-if="isAdmin" v-bind:class="{'active': page == 'admin'}">
+              <hr style="border-color: white;" />
+              <router-link to="/admin">admin</router-link>
+            </li>
           </ul>
         </div>
       </div>
@@ -47,6 +51,9 @@ export default {
     },
     scrolledDown: function(){
       return this.$store.state.scrolledDown;
+    },
+    isAdmin: function(){
+      return this.$store.state.user && !this.$store.state.user.isAnonymous;
     }
   },
   methods: {
@@ -95,6 +102,9 @@ a, .link {
 .badge {
   margin-right: 3px;
   font-size: 1em;
+  &.badge-light {
+    border: 1px solid;
+  }
 }
 
 .overlay {
@@ -135,11 +145,27 @@ h3 {
 h4 {
   padding-bottom: 15px;
   font-size: 1.4em;
-  border-bottom: 1px solid #ccc;
 }
 
 h5 {
   font-size: 1.2em;
+  border-bottom: 1px dotted #ccc;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+h6 {
+  font-size: 1em;
+  font-weight: bold;
+  margin: 20px 0 15px;
+}
+
+.svg-inline--fa {
+  margin: 0px 0 -1px 3px;
+}
+
+.bold {
+  font-weight: bold !important;
 }
 
 .empty {

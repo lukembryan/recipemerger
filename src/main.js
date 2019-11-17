@@ -8,12 +8,14 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {
   faSearch, faBars, faTimes, faEdit, faPlus,
-  faToggleOn, faToggleOff, faCheck
+  faToggleOn, faToggleOff, faCheck, faClock,
+  faTrash
 } from '@fortawesome/pro-light-svg-icons';
 
 library.add(
   faSearch, faBars, faTimes, faEdit, faPlus,
-  faToggleOn, faToggleOff, faCheck
+  faToggleOn, faToggleOff, faCheck, faClock,
+  faTrash
 );
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);

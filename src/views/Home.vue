@@ -11,6 +11,10 @@
           <li v-for="option in options">
             <router-link :to="option.path">{{option.label}}</router-link>
           </li>
+          <li v-if="isAdmin" v-bind:class="{'active': page == 'admin'}">
+            <hr style="border-color: #999;" />
+            <router-link to="/admin">admin</router-link>
+          </li>
         </ul>
       </div>
     </section>
@@ -45,6 +49,14 @@ export default {
         }
       ]
     };
+  },
+  computed: {
+    page: function(){
+      return this.$store.state.page;
+    },
+    isAdmin: function(){
+      return this.$store.state.user && !this.$store.state.user.isAnonymous;
+    }
   }
 }
 </script>

@@ -2,291 +2,224 @@
   <div class="admin content">
     <h3>Admin</h3>
     <login-form v-if="user" v-bind:is-admin="isAdmin" />
-    <div v-if="isAdmin" class="table-responsive">
-      <table v-if="!recipe && recipes" class="table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Tags</th>
-            <th>Source</th>
-            <th>Enabled</th>
-            <th style="width: 30px;" class="text-right">
-              <font-awesome-icon :icon="['fal', 'plus']" @click="addRecipe()" class="link" />
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(recipe, id) in recipes">
-            <td>{{recipe.name}}</td>
-            <td><span class="badge badge-pill badge-dark" v-for="tag in recipe.tags">{{tag}}</span></td>
-            <td>
-              <a v-bind:href="recipe.source.url" target="_blank" v-if="recipe.source.url">{{recipe.source.name}}</a>
-              <strong v-if="recipe.source.reference">{{recipe.source.reference}}</strong>
-            </td>
-            <td>{{recipe.enabled ? 'Yes' : 'No'}}</td>
-            <td class="text-right">
-              <font-awesome-icon :icon="['fal', 'edit']" @click="editRecipe(id)" class="link" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-if="isAdmin" >
+      <div class="table-responsive">
+        <table v-if="!recipe && recipes" class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Tags</th>
+              <th>Source</th>
+              <th>Enabled</th>
+              <th style="width: 30px;" class="text-right">
+                <font-awesome-icon :icon="['fal', 'plus']" @click="addRecipe()" class="link" />
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(recipe, id) in recipes" v-bind:key="id">
+              <td>{{recipe.name}}</td>
+              <td><span class="badge badge-pill badge-dark" v-for="(tag, index) in recipe.tags" v-bind:key="index">{{tag}}</span></td>
+              <td>
+                <a v-bind:href="recipe.source.url" target="_blank" v-if="recipe.source.url">{{recipe.source.name}}</a>
+                <strong v-if="recipe.source.reference">{{recipe.source.reference}}</strong>
+              </td>
+              <td>{{recipe.enabled ? 'Yes' : 'No'}}</td>
+              <td class="text-right">
+                <font-awesome-icon :icon="['fal', 'edit']" @click="editRecipe(id)" class="link" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <div v-if="savedRecipe">
         <form class="inner" name="recipeForm">
-          <div class="top-buttons">
-            <font-awesome-icon :icon="['fal', 'times']" @click="editRecipe()" class="float-right link" />
-          </div>
+          <span class="float-right link" @click="editRecipe()">
+            close <font-awesome-icon :icon="['fal', 'times']" />
+          </span>
           <h4>
-            <span>{{{true: 'Edit: "' + savedRecipe.name + '"', false: 'Add'}[recipe !== 'add']}}</span>
+            <span>{{{true: 'Edit', false: 'Add'}[recipe !== 'add']}} Recipe</span>
           </h4>
           <section>
-            <h5>
-              <span>Details</span>
-              <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.details]]" class="float-right link" @click="editComponent('details')" />
-            </h5>
-            <div v-if="!edit.details">
-              <span>
-                Enabled
-                <font-awesome-icon :icon="['fal', { true: 'toggle-on', false: 'toggle-off'}[savedRecipe.enabled]]" @click="savedRecipe.enabled = !savedRecipe.enabled" class="link" />
-              </span>
-              <hr />
-              <div ng-if="!savedRecipe.details">
-                <div class="image recipe-image-edit" v-bind:style="savedRecipe.imageStyle"></div>
-              </div>
-              <div>{{savedRecipe.description}}</div>
-              <div>
-                <span>Serves:</span>
-                <span class="badge badge-dark badge-pill">{{savedRecipe.serves}}</span>
-              </div>
-              <div>
-                <span>Tags:</span>
-                <span class="badge badge-dark badge-pill" v-for="tag in savedRecipe.tags">{{tag}}</span>
-              </div>
-            </div>
-            <div class="edit" v-if="edit.details">
-              <div class="row">
-                <div class="col-sm-12 col-md-6 col-lg-6">
-                  <div class="form-field col-sm-12 col-md-12 col-lg-12">
-                    <label>Image</label>
-                    <input type="file" id="newImage" name="image" />
-                    <div class="image recipe-image-edit" v-bind:style="savedRecipe.imageStyle"></div>
-                    <font-awesome-icon :icon="['fal', 'check']" class="float-right link" @click="saveImage()" />
-                  </div>
-                </div>
-                <div class="col-sm-12 col-md-6 col-lg-6">
-                  <div class="form-field col-sm-12 col-md-8 col-lg-8">
-                    <label>Name</label>
-                    <input type="text" name="name" v-model="savedRecipe.name" />
-                  </div>
-                  <div class="form-field col-sm-12 col-md-4 col-lg-4">
-                    <label>Serves</label>
-                    <input type="number" name="serves" v-model="savedRecipe.serves" min="1" />
-                  </div>
-                  <div class="form-field col-sm-12 col-md-12 col-lg-12">
-                    <label>Description</label>
-                    <input type="text" name="description" v-model="savedRecipe.description" />
-                  </div>
-                  <div class="form-field col-sm-12 col-md-12 col-lg-12">
-                    <label>Tags</label>
-                    <i style="margin: 10px 10px -25px;" class="link fa fa-plus no-underline pull-right" @click="addTag()"></i>
-                    <input type="text" name="newTag" v-model="newTag" />
-                    <hr class="short spacer" />
-                    <div>
-                      <span class="badge" v-for="tag in savedRecipe.tags">
-                        {{tag}}
-                        <i class="link fa fa-close no-underline"></i>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <h5>
-              <span>Source</span>
-              <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.source]]" class="float-right link" @click="editComponent('source')" />
-            </h5>
-            <div v-if="!edit.source">
-              <div>
-                <a v-bind:href="savedRecipe.source.url" target="_blank" v-if="savedRecipe.source.url">{{savedRecipe.source.name}}</a>
-                <strong v-if="savedRecipe.source.reference">{{savedRecipe.source.reference}}</strong>
-              </div>
-            </div>
-            <div class="edit" v-if="edit.source">
-              <div class="row">
-                <div class="col-sm-12 col-md-6 col-lg-6">
-                  <div class="form-field col-sm-12 col-md-12 col-lg-12">
-                    <h5>Source</h5>
-                    <label>Name</label>
-                    <input type="text" name="name" ng-model="savedRecipe.source.name" />
-                  </div>
-                  <div class="form-field col-sm-12 col-md-12 col-lg-12">
-                    <label>URL</label>
-                    <input type="text" name="source-url" ng-model="savedRecipe.source.url" min="1" />
-                  </div>
-                  <div class="form-field col-sm-12 col-md-12 col-lg-12">
-                    <label>Reference</label>
-                    <input type="text" name="source-reference" ng-model="savedRecipe.source.reference" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <h5>
-              <span>Ingredients</span>
-              <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.ingredients]]" class="float-right link" @click="editComponent('ingredients')" />
-            </h5>
-            <div class="empty" v-if="savedRecipe.ingredients.length === 0">
-              no ingredients to show
-            </div>
-            <div v-if="!edit.ingredients">
-              <div v-for="ingredients in savedRecipe.ingredients">
-                <div class="ingredient-list col-sm-12 col-md-12 col-lg-12">
-                  <h5 v-if="edit.ingredientGroup != ingredients.component && savedRecipe.ingredients.length > 1">{{ingredients.component}}</h5>
-                  <span class="link" @click="edit.ingredientGroup = ingredients.component" v-if="edit.ingredientGroup != ingredients.component">
-                    edit
-                  </span>
-                  <div class="ingredient" v-for="ingredient in ingredients.list" v-if="edit.ingredientGroup != ingredients.component">
-                    <span>{{ingredient.description}}</span>
-                    <span class="badge pull-right" v-if="ingredient.quantity || ingredient.unit">{{ingredient.quantity}} {{ingredient.unit}}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="edit" v-if="edit.ingredients">
-              <div class="row">
-                <div v-for="ingredients in savedRecipe.ingredients">
-                  <div class="ingredient-list col-sm-12 col-md-12 col-lg-12">
-                    <strong>
-                      <span style="margin-right: 10px;" class="link no-underline" @click="removeIngredient(ingredients.component)"><i class="fa fa-trash"></i></span>
-                      <span>Edit '{{ingredients.component.length > 0 ? ingredients.component : 'new component'}}' ingredients</span>
-                    </strong>
-                    <div class="form-field col-sm-10 col-md-10 col-lg-10">
-                      <label>Component</label>
-                      <input type="text" name="ingredient-component" v-bind:disabled="savedRecipe.ingredients.length === 1" v-model="ingredients.component" />
-                    </div>
-                    <div class="form-field col-sm-2 col-md-2 col-lg-2">
-                      <button class="btn btn-success" @click="edit.ingredientGroup = null" v-if="edit.ingredientGroup == ingredients.component">
-                        <i class="fa fa-check"></i>
-                      </button>
-                    </div>
-                    <div class="pull-right" ng-if="edit.ingredient === null">
-                      <button class="btn btn-primary" @click="addIngredient(ingredients.component)">
-                        <i class="fa fa-plus"></i>
-                      </button>
-                    </div>
-                    <div class="empty" v-if="ingredients.list.length === 0">
-                      no ingredients to show
-                    </div>
-                    <div v-for="(ingredient, index) in ingredients.list">
-                      <div v-if="edit.ingredient != index">
-                        <span style="margin-right: 15px;" class="link no-underline" @click="edit.ingredient = index"><i class="fa fa-edit"></i></span>
-                        <span style="margin-right: 15px;" class="link no-underline" @click="removeIngredient(ingredients.component, index)"><i class="fa fa-trash"></i></span>
-                        <span>{{ingredient.description}} <span v-if="ingredient.quantity || ingredient.unit">-</span> {{ingredient.quantity}} {{ingredient.unit}}</span>
-                      </div>
-                      <!--
-                      <div class="row" ng-if="ctrl.edit.ingredient == $index">
-                        <hr class="spacer short" />
-                        <div class="form-field col-sm-12 col-md-6 col-lg-6">
-                          <label>Description</label>
-                          <input type="text" name="ingredient-description-{{$parent.$index}}-{{$index}}" ng-model="ingredient.description" />
-                        </div>
-                        <div class="form-field col-sm-4 col-md-2 col-lg-2">
-                          <label>Quantity</label>
-                          <input type="number" name="ingredient-quantity-{{$parent.$index}}-{{$index}}" ng-model="ingredient.quantity" min="0" />
-                        </div>
-                        <div class="form-field col-sm-4 col-md-2 col-lg-2">
-                          <label>Unit</label>
-                          <input type="text" name="ingredient-unit-{{component}}-{{$index}}" ng-model="ingredient.unit" />
-                        </div>
-                        <div class="form-field col-sm-4 col-md-2 col-lg-2">
-                          <button class="btn btn-success" ng-click="ctrl.edit.ingredient = null" ng-if="ctrl.edit.ingredient == $index">
-                            <i class="fa fa-check"></i>
-                          </button>
-                        </div>
-                      </div>
-                    -->
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <!--
-          <h4>
-            <span>Steps</span>
-            <button class="btn btn-primary" ng-click="ctrl.addStep()"><i class="fa fa-plus"></i></button>
-          </h4>
-          <hr />
-          <div class="empty" ng-if="ctrl.recipe.steps.length === 0">
-            no steps to show
-          </div>
-          <div ng-repeat="step in ctrl.recipe.steps">
-            <div class="row" ng-if="ctrl.edit.step !== $index">
-              <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
-                <span class="badge">{{$index + 1}}</span>
-                <span>{{step.description}}</span>
-              </div>
-              <div class="col-xs-10 col-sm-10 col-md-4 col-lg-4">
-                <div><i class="fa fa-clock-o"></i> {{step.duration}} min</div>
-                <hr class="short spacer" />
-                <div>Parallel? <strong>{{{true: 'Yes', false: 'No'}[step.parallel]}}</strong></div>
-                <div ng-if="step.parallel">Setup <i class="fa fa-clock-o"></i> {{step.setupDuration}} min</div>
-                <hr class="short spacer" />
-                <div ng-if="step.dependsOn">
-                  <div>Depends On:</div>
-                  <div><span class="badge" ng-repeat="dependency in step.dependsOn">Step {{dependency + 1}}</span></div>
-                </div>
-              </div>
-              <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-                <button class="btn btn-primary pull-right" ng-click="ctrl.edit.step = $index">
-                  <i class="fa fa-edit"></i>
-                </button>
-              </div>
-            </div>
-            <div class="edit" ng-show="ctrl.edit.step === $index">
+            <div class="details" v-bind:class="{'edit': edit.details}">
               <h5>
-                <span style="margin-right: 10px;" class="link no-underline" ng-click="ctrl.removeStep($index)"><i class="fa fa-trash"></i></span>
-                <span>Edit Step {{$index + 1}}</span>
+                <span>Details</span>
+                <span class="float-right link" @click="editComponent('details')">
+                  {{edit.details ? 'save' : 'edit'}} <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.details]]" />
+                </span>
               </h5>
-              <div class="row">
-                <div class="form-field col-sm-12 col-md-10 col-lg-10">
-                  <label>Description</label>
-                  <textarea name="step-description-{{$index}}" ng-model="step.description"></textarea>
+              <div class="form-field image">
+                <div class="image recipe-image-edit" v-bind:style="savedRecipe.imageStyle"></div>
+                <font-awesome-icon v-if="edit.details" :icon="['fal', 'check']" style="margin: 15px 0;" class="float-right link" @click="saveImage()" />
+                <input v-if="edit.details" style="display: inline; width: auto; margin: 15px 0 0 -5px;" type="file" id="newImage" name="image" />
+              </div>
+              <div class="form-field">
+                <label>Name</label>
+                <input v-if="edit.details" type="text" name="name" v-model="savedRecipe.name" />
+                <div v-if="!edit.details">{{savedRecipe.name}}</div>
+              </div>
+              <div class="form-field">
+                <label>Description</label>
+                <textarea v-if="edit.details" name="description" v-model="savedRecipe.description" /></textarea>
+                <div v-if="!edit.details">{{savedRecipe.description.length > 0 ? savedRecipe.description : 'none'}}</div>
+              </div>
+              <div class="columns">
+                <div class="form-field">
+                  <label>Serves</label>
+                  <input v-if="edit.details" type="number" name="serves" v-model="savedRecipe.serves" min="1" />
+                  <div v-if="!edit.details">{{savedRecipe.serves}}</div>
                 </div>
-                <div class="col-sm-12 col-md-2 col-lg-2">
-                  <button class="btn btn-success pull-right" ng-click="ctrl.edit.step = null">
-                    <i class="fa fa-check"></i>
-                  </button>
-                </div>
-                <div class="form-field col-sm-12 col-md-4 col-lg-4">
-                  <label>Duration</label>
-                  <input type="number" name="step-duration-{{$index}}" ng-model="step.duration" min="1" />
-                </div>
-                <div class="form-field col-sm-6 col-md-4 col-lg-4">
-                  <label>Parallel</label>
-                  <div>
-                    <i class="fa checkbox" ng-class="{'fa-check-square-o': step.parallel, 'fa-square-o': !step.parallel}" ng-click="ctrl.toggleParallel(step)"></i>
+                <div class="form-field">
+                  <label>Tags</label>
+                  <font-awesome-icon v-if="edit.details" :icon="['fal', 'plus']" @click="addTag()" style="position: absolute; top: 32px; right: 10px;" class="float-right link" />
+                  <input v-if="edit.details" type="text" name="newTag" v-model="newTag" />
+                  <div v-bind:style="{'margin-top': (edit.details ? '10' : '0') + 'px'}">
+                    <span class="badge badge-dark badge-pill" v-for="(tag, index) in savedRecipe.tags" v-bind:key="index">
+                      {{tag}}
+                      <span class="link" v-if="edit.details" @click="removeTag(index)">
+                        <font-awesome-icon :icon="['fal', 'trash']" />
+                      </span>
+                    </span>
                   </div>
                 </div>
-                <div class="form-field col-sm-6 col-md-4 col-lg-4" ng-if="step.parallel">
-                  <label>Setup Duration</label>
-                  <input type="number" name="step-setupduration-{{$index}}" ng-model="step.setupDuration" min="1" />
+                <div class="form-field">
+                  <label>Enabled</label>
+                  <font-awesome-icon v-if="edit.details" :icon="['fal', { true: 'toggle-on', false: 'toggle-off'}[savedRecipe.enabled]]" @click="savedRecipe.enabled = !savedRecipe.enabled" style="display: block;" class="link" />
+                  <div v-if="!edit.details">{{savedRecipe.enabled ? 'Yes' : 'No'}}</div>
                 </div>
-                <div class="form-field col-sm-12 col-md-12 col-lg-12" ng-if="$index > 0">
-                  <label>Depends On</label>
-                  <select name="addDependent" ng-model="ctrl.selectedDependency" ng-change="ctrl.addDependency(step)">
-                    <option value="">select a step</option>
-                    <option value="{{$index}}" ng-repeat="dependency in shownSteps = (ctrl.recipe.steps | filter: ctrl.filterSteps($parent.$index))">{{$index + 1}} - {{dependency.description | limitTo: 50}}...</option>
-                  </select>
-                  <hr class="short spacer" />
-                  <div ng-repeat="dependency in step.dependsOn">
-                    <span style="margin-right: 15px;" class="link no-underline" ng-click="ctrl.removeDependency(step, $index)"><i class="fa fa-trash"></i></span>
-                    <span class="badge">Step {{dependency + 1}}</span>
+              </div>
+              <div class="source">
+                <div class="form-field full-width" v-show="!edit.details">
+                  <label>Source</label>
+                  <div>
+                    <a v-bind:href="savedRecipe.source.url" target="_blank" v-if="savedRecipe.source.url">{{savedRecipe.source.name}}</a>
+                    <strong v-if="savedRecipe.source.reference">{{savedRecipe.source.reference}}</strong>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label v-if="edit.details">Source Name</label>
+                  <input v-if="edit.details" type="text" name="name" ng-model="savedRecipe.source.name" />
+                </div>
+                <div class="form-field" v-if="edit.details">
+                  <label>Source URL</label>
+                  <input type="text" name="source-url" ng-model="savedRecipe.source.url" min="1" />
+                </div>
+                <div class="form-field" v-if="edit.details">
+                  <label>Source Reference</label>
+                  <input type="text" name="source-reference" ng-model="savedRecipe.source.reference" />
+                </div>
+              </div>
+            </div>
+            <div class="ingredients-steps">
+              <div v-if="savedRecipe.ingredients.length === 0">
+                no ingredients to show
+              </div>
+              <div v-if="savedRecipe.steps.length === 0">
+                no steps to show
+              </div>
+              <div class="ingredients" v-bind:class="{'edit': edit.ingredients}">
+                <h5>
+                  <span>Ingredients</span>
+                  <span class="float-right link" @click="editComponent('ingredients')">
+                    {{edit.ingredients ? 'save' : 'edit'}} <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.ingredients]]" />
+                  </span>
+                </h5>
+                <div v-for="(ingredients, component) in savedRecipe.ingredients" v-bind:key="component">
+                  <div v-if="ingredients.list.length === 0">
+                    no ingredients to show
+                  </div>
+                  <div v-if="edit.ingredients" class="form-field">
+                    <span @click="addComponent()" class="float-right link">
+                      add <font-awesome-icon :icon="['fal', 'plus']" />
+                    </span>
+                    <label>Component</label>
+                    <input type="text" v-bind:name="'ingredient-component-' + component" v-bind:disabled="savedRecipe.ingredients.length === 1" v-model="ingredients.component" />
+                  </div>
+                  <div class="component" v-if="!edit.ingredients">
+                    <h6 v-if="savedRecipe.ingredients.length > 1">{{ingredients.component}}</h6>
+                    <div class="ingredient" v-for="(ingredient, index) in ingredients.list" v-bind:key="index">
+                      <span class="badge badge-light badge-pill" v-if="ingredient.quantity || ingredient.unit">{{ingredient.quantity}} {{ingredient.unit}}</span>
+                      <span>{{ingredient.description}}</span>
+                    </div>
+                  </div>
+                  <div style="text-align: right; margin-bottom: -25px;">
+                    <span v-if="edit.ingredients" @click="addIngredient(ingredients.component)" class="link">
+                      add <font-awesome-icon :icon="['fal', 'plus']" />
+                    </span>
+                  </div>
+                  <div v-if="edit.ingredients" class="ingredient-list">
+                    <div v-for="(ingredient, index) in ingredients.list" v-bind:key="index">
+                      <div class="form-field quantity">
+                        <label v-if="index === 0">Quantity</label>
+                        <input type="number" v-bind:name="'ingredient-quantity-' + component + '-' + index" v-model="ingredient.quantity" min="0" />
+                      </div>
+                      <div class="form-field unit">
+                        <label v-if="index === 0">Unit</label>
+                        <input type="text" v-bind:name="'ingredient-unit-' + component + '-' + index" v-model="ingredient.unit" />
+                      </div>
+                      <div class="form-field description">
+                        <label v-if="index === 0">Description</label>
+                        <input type="text" v-bind:name="'ingredient-description-' + component + '-' + index" v-model="ingredient.description" />
+                      </div>
+                      <div class="form-field delete">
+                        <div class="link" v-if="edit.ingredients" @click="removeIngredient(index)">
+                          <font-awesome-icon :icon="['fal', 'trash']" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="steps" v-bind:class="{'edit': edit.steps}">
+                <h5>
+                  <span>Steps</span>
+                  <span class="float-right link" @click="editComponent('steps')">
+                    {{edit.steps ? 'save' : 'edit'}} <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.steps]]" />
+                  </span>
+                </h5>
+                <div class="step" v-for="(step, index) in savedRecipe.steps" v-bind:key="index">
+                  <div class="step-number"><span class="badge badge-dark badge-pill">{{index + 1}}</span></div>
+                  <div class="form-field">
+                    <label>Duration</label>
+                    <input type="number" name="'step-duration-' + index" v-if="edit.steps" v-model="step.duration" min="1" />
+                    <div class="duration" v-if="!edit.steps"><font-awesome-icon :icon="['fal', 'clock']" /> {{step.duration}} min</div>
+                  </div>
+                  <div class="form-field">
+                    <label>Parallel</label>
+                    <font-awesome-icon v-if="edit.steps" :icon="['fal', { true: 'toggle-on', false: 'toggle-off'}[step.parallel]]" @click="toggleParallel(step)" style="display: block;" class="link" />
+                    <div v-if="!edit.steps">{{step.parallel ? 'Yes' : 'No'}}</div>
+                  </div>
+                  <div class="form-field">
+                    <label v-if="step.parallel">Setup Duration</label>
+                    <div v-if="!edit.steps && step.parallel"><font-awesome-icon :icon="['fal', 'clock']" /> {{step.setupDuration}} min</div>
+                    <input type="number" v-bind:name="'step-setupduration-' + index" v-if="edit.steps && step.parallel" v-model="step.setupDuration" min="1" />
+                  </div>
+                  <span class="float-right link" v-if="edit.steps" @click="removeStep(index)">
+                    delete <font-awesome-icon :icon="['fal', 'trash']" v-if="edit.steps" />
+                  </span>
+                  <div class="form-field depends-on" v-if="step.dependsOn && index > 0">
+                    <label>Depends On</label>
+                    <div v-if="!edit.steps">
+                      <span class="badge badge-light badge-pill" v-if="!edit.steps" v-for="(dependency, dependencyIndex) in step.dependsOn" v-bind:key="dependencyIndex">{{dependency + 1}}</span>
+                    </div>
+                    <select name="addDependent" v-model="selectedDependency" v-if="edit.steps" @change="addDependency(step)">
+                      <option value="">select a step</option>
+                      <option v-bind:value="stepDependency" v-for="(dependency, stepDependency) in savedRecipe.steps">{{stepDependency + 1}} - {{dependency.description.substring(0,50)}}...</option>
+                    </select>
+                    <div v-if="edit.steps" v-for="(dependency, dependencyIndex) in step.dependsOn">
+                      <span style="margin: 10px 10px 0 0;" class="badge badge-light badge-pill">Step {{dependencyIndex + 1}}</span>
+                      <font-awesome-icon :icon="['fal', 'trash']" v-if="edit.steps" @click="removeDependency(step, dependencyIndex)" class="link" />
+                    </div>
+                  </div>
+                  <div class="form-field description">
+                    <label>Description</label>
+                    <div v-if="!edit.steps">{{step.description}}</div>
+                    <textarea v-if="edit.steps" v-bind:name="'step-description-' + index" v-model="step.description"></textarea>
                   </div>
                 </div>
               </div>
             </div>
-            <hr class="short dotted" />
-          </div>
-        -->
-        </section>
+          </section>
         </form>
       </div>
       <div class="empty" v-if="!recipes && !recipe">
@@ -310,11 +243,11 @@ export default {
         details: false,
         source: false,
         ingredients: false,
-        ingredientGroup: null,
         ingredient: null,
         steps: false
       },
-      newTag: ''
+      newTag: '',
+      selectedDependency: ''
     };
   },
   computed: {
@@ -413,17 +346,25 @@ export default {
   padding: 20px;
 }
 
-.top-buttons {
-  font-size: 1.2em;
+h5 {
+  margin-top: 15px;
+  .link {
+    font-size: initial;
+  }
+}
+
+.fa-toggle-on, .fa-toggle-off {
+  font-size: 2em;
 }
 
 form {
   label {
-    display: block;
+    display: inline;
     width: 100%;
     font-weight: normal;
     text-transform: uppercase;
-    font-size: 0.8em;
+    font-size: 0.7em;
+    margin-bottom: 2px;
   }
   input, textarea, select {
     display: block;
@@ -459,9 +400,152 @@ form {
 		}
 	}
   .edit {
-    background-color: #ddd;
+    background-color: #eee;
     padding: 15px;
-    margin: 15px -15px;
+    > div {
+      &:nth-child(1){
+        margin-bottom: 15px;
+      }
+    }
+  }
+}
+
+.details {
+  display: grid;
+  grid-gap: 0 15px;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: minmax(10px, auto);
+  border: 1px solid #ccc;
+  padding: 15px 15px 5px;
+  margin-bottom: 15px;
+  h5 {
+    grid-column-start: 1;
+    grid-column-end: 3;
+    grid-row-start: 1;
+    margin-top: 0;
+  }
+  .columns {
+    display: grid;
+    grid-column-gap: 15px;
+    grid-template-columns: 100px auto 70px;
+    grid-auto-rows: minmax(10px, auto);
+    .form-field {
+      &:nth-child(1){
+        grid-column-start: 1;
+        grid-column-end: 2;
+      }
+      &:nth-child(2){
+        grid-column-start: 2;
+        grid-column-end: 3;
+      }
+      &:nth-child(3){
+        grid-column-start: 3;
+        grid-column-end: 4;
+      }
+    }
+  }
+  &.edit {
+    .source {
+      display: grid;
+      grid-gap: 0 15px;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-columns: minmax(100px, auto);
+      grid-auto-rows: minmax(10px, auto);
+      .form-field {
+        margin-bottom: 10px;
+        &.full-width {
+          grid-column-start: 1;
+          grid-column-end: 4;
+        }
+        &:nth-child(2){
+          grid-column-start: 1;
+          grid-column-end: 2;
+        }
+        &:nth-child(3){
+          grid-column-start: 2;
+          grid-column-end: 3;
+        }
+        &:nth-child(4){
+          grid-column-start: 3;
+          grid-column-end: 4;
+        }
+      }
+  }
+  }
+  .form-field {
+    grid-column-start: 2;
+    grid-column-end: 3;
+    margin-bottom: 10px;
+    &.image {
+      grid-column-start: 1;
+      grid-column-end: 2;
+      grid-row-start: 2;
+      grid-row-end: 6;
+    }
+  }
+}
+
+.ingredients-steps {
+  &:not(.edit) {
+    display: grid;
+    grid-gap: 0 15px;
+    grid-template-columns: 1fr 2fr;
+    grid-auto-columns: minmax(100px, auto);
+    grid-auto-rows: minmax(10px, auto);
+    border: 1px dotted #ccc;
+    > div {
+      padding: 0 15px;
+    }
+  }
+  .ingredient {
+    margin-bottom: 10px;
+    > span {
+      &.badge {
+        margin-right: 10px;
+        font-size: 0.9em;
+      }
+    }
+  }
+}
+
+.steps {
+  .step {
+    display: grid;
+    grid-gap: 0 15px;
+    grid-template-columns: 40px 100px 1fr 1fr 1fr;
+    grid-auto-columns: minmax(100px, auto);
+    grid-auto-rows: minmax(10px, auto);
+    margin: 10px 0 20px;
+    > .step-number {
+      margin-top: 7px;
+    }
+    > .link {
+      justify-self: end;
+    }
+    .form-field {
+      margin-bottom: 10px;
+    }
+    .description {
+      grid-column-start: 1;
+      grid-column-end: 6;
+      grid-row-start: 2;
+    }
+    .depends-on {
+      grid-column-start: 1;
+      grid-column-end: 6;
+      grid-row-start: 3;
+    }
+  }
+  &:not(.edit) {
+    .step {
+      .description {
+        > div {
+          padding: 10px;
+          border: 1px solid #ccc;
+          background-color: #f7f7f7;
+        }
+      }
+    }
   }
 }
 
@@ -470,7 +554,7 @@ form {
   background-position: center center;
   &.recipe-image-edit {
     width: 100%;
-    height: 200px;
+    height: 300px;
   }
   &.directory-image {
     position: relative;
@@ -493,6 +577,11 @@ form {
   }
 }
 
+.table-responsive {
+  margin: 0 -10px;
+  width: initial;
+}
+
 .table {
   &.logic {
     > thead {
@@ -507,6 +596,41 @@ form {
         > td {
           padding: 0;
         }
+      }
+    }
+  }
+}
+
+.ingredient-list {
+  .form-field {
+    margin-bottom: 0;
+  }
+  > div {
+    display: grid;
+    grid-template-columns: 60px 100px auto 20px;
+    grid-auto-rows: minmax(10px, auto);
+    .quantity {
+      grid-column-start: 1;
+      grid-column-end: 2;
+    }
+    .unit {
+      grid-column-start: 2;
+      grid-column-end: 3;
+    }
+    .description {
+      grid-column-start: 3;
+      grid-column-end: 4;
+    }
+    .delete {
+      position: relative;
+      grid-column-start: 4;
+      grid-column-end: 5;
+      justify-self: end;
+      align-self: end;
+      > .link {
+        position: absolute;
+        bottom: 7px;
+        right: 0px;
       }
     }
   }
