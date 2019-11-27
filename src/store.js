@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+import mixins from '@/mixins.js';
 
 const fb = require('./firebase.js');
 
@@ -50,8 +51,7 @@ export default new Vuex.Store({
           });
         }else{
           fb.auth.signInAnonymously().catch(function(error){
-            var errorCode = error.code;
-            var errorMessage = error.message;
+            console.log('signInAnonymously', error);
           });
         }
       });
@@ -59,50 +59,24 @@ export default new Vuex.Store({
     recipeLoaded: function({commit}, recipe){
       commit('setRecipe', recipe);
     },
-    routeChanged: function({commit}, page){
-      commit('setPage', page);
+    routeChanged: function({commit}, pages){
+      commit('setPage', pages[1]);
     },
     updateScroll: function({commit}, event){
       var scrolledDown = event.srcElement.scrollingElement.scrollTop > 50;
       commit('setScrolledDown', scrolledDown);
     },
-    loadRecipes: function({commit, dispatch}){
+    loadRecipes: function({commit}){
       var recipes = {};
       fb.recipes.get().then(function(querySnapshot) {
         querySnapshot.forEach(function(doc) {
           recipes[doc.id] = doc.data();
-          getImage(recipes[doc.id]);
+          mixins.methods.getImage(recipes[doc.id]);
         });
         commit('setRecipes', recipes);
       }).catch(function(error) {
         console.log('Error getting documents: ', error);
       });
-
-      function getImage(recipe){
-        if(!recipe.image) recipe.image = 'recipe-photos/placeholder.png';
-
-        var ref = fb.storage.ref(recipe.image);
-
-        ref.getDownloadURL().then(function(url){
-          recipe.imageStyle = {'background-image': 'url(' + url + ')'};
-        }).catch(function(error){
-          switch(error.code){
-            case 'storage/object_not_found':
-              // File doesn't exist
-              break;
-            case 'storage/unauthorized':
-              // User doesn't have permission to access the object
-              break;
-            case 'storage/canceled':
-              // User canceled the upload
-              break;
-            case 'storage/unknown':
-              // Unknown error occurred, inspect the server response
-              break;
-          }
-          recipe.imageStyle = {'background-image': 'none'};
-        });
-      }
     }
   }
 });

@@ -15,14 +15,17 @@ export default {
 }
 </script>
 
-<style scoped lang="less">
+<style lang="less">
 .browse {
   grid-column-start: 1;
   display: grid;
   grid-template-rows: 70px auto;
   grid-template-columns: 100%;
-  .recipe-masonry {
+  > .recipe-masonry {
     grid-row-start: 1;
+    > .grid-layout {
+      border-top: 5px solid #eee;
+    }
   }
 }
 </style>

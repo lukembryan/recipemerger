@@ -1,8 +1,12 @@
 <template>
   <div class="recipe-masonry">
     <div class="grid-layout">
-      <div class="grid-item grid-item-1">666</div>
-      <div class="grid-item grid-item-2">item 2</div>
+      <div class="grid-item" v-for="recipe in recipes" :style="recipe.imageStyle">
+        <span class="name">{{recipe.name}}</span>
+      </div>
+      <!--
+      <div class="grid-item">span 1</div>
+      <div class="grid-item span 3">span 3</div>
       <div class="grid-item span-3 grid-item-3">item 3</div>
       <div class="grid-item grid-item-4">item 4</div>
       <div class="grid-item span-2 grid-item-5">item 5</div>
@@ -51,6 +55,7 @@
       <div class="grid-item grid-item-48">item 48</div>
       <div class="grid-item grid-item-49">item 49</div>
       <div class="grid-item grid-item-50">item 50</div>
+      -->
     </div>
   </div>
 </template>
@@ -60,6 +65,11 @@ export default {
   name: 'recipe-masonry',
   props: {
     layout: String
+  },
+  computed: {
+    recipes: function(){
+      return this.$store.state.recipes;
+    }
   }
 }
 </script>
@@ -73,14 +83,16 @@ export default {
   grid-gap: 1px;
   grid-auto-rows: minmax(180px, auto);
   grid-auto-flow: dense;
-  overflow-x: scroll;
+  overflow-x: hidden;
   > .grid-item {
     padding: 1rem;
     font-size: 14px;
     font-weight: bold;
     text-transform: uppercase;
-    color: #929796;
+    color: #fff;
     background-color: #333;
+    background-position: center center;
+    background-size: cover;
     &:nth-child(odd) {
       background-color: #424242;
     }
@@ -88,10 +100,19 @@ export default {
       grid-column-end: span 2;
       grid-row-end: span 2;
     }
-
     &.span-3 {
       grid-column-end: span 3;
       grid-row-end: span 4;
+    }
+    &.span-2, &.span-3 {
+      > .name {
+        display: inline;
+      }
+    }
+    > .name {
+      display: table-caption;
+      padding: 1px 5px;
+      background-color: #00000070;
     }
   }
 }

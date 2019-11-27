@@ -61,7 +61,7 @@ export default {
 }
 </script>
 
-<style scoped lang="less">
+<style lang="less">
 @import '../assets/less/shared.less';
 
 .home {
@@ -78,6 +78,9 @@ export default {
     grid-row-end: 2;
     grid-column-start: 2;
     grid-column-end: 3;
+    > .grid-layout {
+      border-left: 5px solid #eee;
+    }
   }
   grid-column-start: 1;
   > section {

@@ -1,5 +1,5 @@
 <template>
-  <div id="layout">
+  <div id="layout" :class="page">
     <header v-bind:class="{'compact': scrolledDown}">
       <h1 v-if="page != 'home'">
         <img src="/img/logo.png" />
@@ -74,7 +74,7 @@ export default {
     $route(to, from){
       this.showMenu = false;
       this.$store.dispatch('recipeLoaded', to.params.recipe);
-      this.$store.dispatch('routeChanged', to.name);
+      this.$store.dispatch('routeChanged', [from.name, to.name]);
     }
   }
 };
@@ -89,6 +89,12 @@ body {
   font-family: 'Titillium Web', sans-serif;
 }
 
+pre {
+  white-space: pre-wrap;
+  line-height: 1;
+  font-size: 0.7em;
+}
+
 a, .link {
   color: lighten(@brown, 10%);
   cursor: pointer;
@@ -100,10 +106,18 @@ a, .link {
 }
 
 .badge {
-  margin-right: 3px;
+  margin: 3px 3px 0 0;
   font-size: 1em;
   &.badge-light {
     border: 1px solid;
+  }
+  > input.badge-input {
+    display: inline;
+    width: 60px;
+    height: 20px;
+    padding: 2px;
+    border-radius: 20px 0 0 20px;
+    border: 1px solid #aaa;
   }
 }
 
@@ -170,17 +184,25 @@ h6 {
 
 .empty {
   text-decoration: center;
-  padding: 15px;
+  padding: 0 0 15px;
 }
 
 #layout {
   display: grid;
   grid-template-columns: 100%;
   grid-template-rows: 70px auto;
+  &.home {
+    > header {
+      &.compact {
+        background-color: transparent;
+      }
+    }
+  }
   > header {
     position: fixed;
     display: grid;
-    grid-row: 1/2;
+    grid-row-start: 1;
+    grid-row-end: 2;
     grid-template-columns: 2fr 6fr;
     grid-template-rows: 100%;
     background-color: transparent;
