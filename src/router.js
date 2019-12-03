@@ -13,9 +13,14 @@ export default new Router({
       component: () => import('./views/home.vue')
     },
     {
-      path: '/browse/:recipe?',
+      path: '/browse',
       name: 'browse',
       component: () => import('./views/browse.vue')
+    },
+    {
+      path: '/recipe/:recipe?',
+      name: 'recipe',
+      component: () => import('./views/recipe.vue')
     },
     {
       path: '/cook',

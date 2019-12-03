@@ -1,35 +1,33 @@
 <template>
   <div class="home content">
     <section>
-      <search />
       <h1>
         <img src="img/logo.png" />
         <span>sizzle</span>
       </h1>
       <div class="menu landing-panel">
         <ul>
-          <li v-for="option in options">
+          <li v-for="(option, index) in options" v-bind:key="index">
             <router-link :to="option.path">{{option.label}}</router-link>
           </li>
           <li v-if="isAdmin" v-bind:class="{'active': page == 'admin'}">
-            <hr style="border-color: #999;" />
             <router-link to="/admin">admin</router-link>
           </li>
         </ul>
       </div>
     </section>
-    <recipe-masonry layout="right" />
+    <recipe-masonry />
   </div>
 </template>
 
 <script>
-import search from '@/components/search.vue';
+import mixins from '@/mixins.js';
 import recipeMasonry from '@/components/recipe-masonry.vue';
 
 export default {
   name: 'home',
+  mixins: [mixins],
   components: {
-    search,
     recipeMasonry
   },
   data: function(){
@@ -51,9 +49,6 @@ export default {
     };
   },
   computed: {
-    page: function(){
-      return this.$store.state.page;
-    },
     isAdmin: function(){
       return this.$store.state.user && !this.$store.state.user.isAnonymous;
     }
@@ -85,14 +80,14 @@ export default {
   grid-column-start: 1;
   > section {
     position: fixed;
-    top: 70px;
+    top: 40px;
     left: 0;
     height: 100%;
     width: 40%;
     padding: 0 50px 50px;
     > h1 {
       font-size: 4em;
-      margin: 40px 0 20px;
+      margin: 0 0 40px;
       width: 100%;
       line-height: 1;
       color: lighten(@brown, 20%);

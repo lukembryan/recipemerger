@@ -4,19 +4,29 @@ export default {
   data: function () {
     return {}
   },
-  computed: {},
+  computed: {
+    page: function(){
+      return this.$store.state.page;
+    },
+    recipes: function(){
+      return this.$store.state.recipes;
+    },
+    recipe: function(){
+      return this.$store.state.recipe;
+    }
+  },
   methods: {
     getImage: function(recipe, callback){
-      if(!recipe.image) recipe.image = 'recipe-photos/placeholder.png';
+      if(!recipe.details.image) recipe.details.image = 'recipe-photos/placeholder.png';
 
-      var ref = fb.storage.ref(recipe.image);
+      var ref = fb.storage.ref(recipe.details.image);
 
       ref.getDownloadURL().then(function(url){
-        recipe.imageStyle = {'background-image': 'url(' + url + ')'};
-        if(callback) callback(recipe.imageStyle);
+        recipe.details.imageStyle = {'background-image': 'url(' + url + ')'};
+        if(callback) callback(recipe.details.imageStyle);
       }).catch(function(error){
         console.log('getDownloadURL', error);
-        recipe.imageStyle = {'background-image': 'none'};
+        recipe.details.imageStyle = {'background-image': 'none'};
       });
     },
     clone: function(original){

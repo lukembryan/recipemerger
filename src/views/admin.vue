@@ -11,22 +11,26 @@
               <th>Tags</th>
               <th>Source</th>
               <th>Enabled</th>
-              <th style="width: 30px;" class="text-right">
-                <font-awesome-icon :icon="['fal', 'plus']" @click="addRecipe()" class="link" />
+              <th style="width: 80px;" class="text-right">
+                <router-link :to="{ name: 'admin', params: { recipe: 'add' }}">
+                  <font-awesome-icon :icon="['fal', 'plus']" @click="addRecipe()" class="link" /> add
+                </router-link>
               </th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(recipe, id) in recipes" v-bind:key="id">
-              <td>{{recipe.name}}</td>
-              <td><span class="badge badge-pill badge-dark" v-for="(tag, index) in recipe.tags" v-bind:key="index">{{tag}}</span></td>
+              <td>{{recipe.details.name}}</td>
+              <td><span class="badge badge-pill badge-dark" v-for="(tag, index) in recipe.details.tags" v-bind:key="index">{{tag}}</span></td>
               <td>
-                <a v-bind:href="recipe.source.url" target="_blank" v-if="recipe.source.url">{{recipe.source.name}}</a>
-                <strong v-if="recipe.source.reference">{{recipe.source.reference}}</strong>
+                <a v-bind:href="recipe.details.source.url" target="_blank" v-if="recipe.details.source.url">{{recipe.details.source.name}}</a>
+                <strong v-if="recipe.details.source.reference">{{recipe.details.source.reference}}</strong>
               </td>
-              <td>{{recipe.enabled ? 'Yes' : 'No'}}</td>
+              <td>{{recipe.details.enabled ? 'Yes' : 'No'}}</td>
               <td class="text-right">
-                <font-awesome-icon :icon="['fal', 'edit']" @click="editRecipe(id, true)" class="link" />
+                <router-link :to="{ name: 'admin', params: { recipe: id }}">
+                  <font-awesome-icon :icon="['fal', 'edit']" class="link" /> edit
+                </router-link>
               </td>
             </tr>
           </tbody>
@@ -34,53 +38,59 @@
       </div>
       <div v-if="savedRecipe">
         <form class="inner" name="recipeForm">
-          <span class="float-right link" @click="editRecipe(null, true)">
-            close <font-awesome-icon :icon="['fal', 'times']" />
-          </span>
+          <router-link :to="{ name: 'admin', params: {}}" class="float-right link">
+            <font-awesome-icon :icon="['fal', 'times']" /> close
+          </router-link>
           <h4>
             <span>{{{true: 'Edit', false: 'Add'}[recipe !== 'add']}} Recipe</span>
           </h4>
+          <span style="margin-left: 20px;" class="link" v-if="recipe === 'add'" @click="saveRecipe()">
+            <font-awesome-icon :icon="['fal', 'plus']" /> confirm
+          </span>
+          <span style="margin-left: 20px;" class="link text-danger" v-if="recipe !== 'add'" @click="deleteRecipe()">
+            <font-awesome-icon :icon="['fal', 'trash']" /> delete
+          </span>
           <section>
             <!--
+            <pre>{{savedRecipe}}</pre>
             -->
-            <pre>{{savedRecipe.steps}}</pre>
             <div class="details" v-bind:class="{'edit': edit.details}">
               <h5>
                 <span>Details</span>
-                <span class="float-right link" @click="editComponent('details')">
-                  {{edit.details ? 'save' : 'edit'}} <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.details]]" />
+                <span class="float-right link" v-if="recipe !== 'add'" @click="editComponent('details')">
+                  <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.details]]" /> {{edit.details ? 'save' : 'edit'}}
                 </span>
               </h5>
               <div class="form-field image">
-                <div class="image recipe-image-edit" v-bind:style="savedRecipe.imageStyle"></div>
-                <span style="margin: 15px 0;" class="float-right link" v-if="edit.details">
-                  upload image <font-awesome-icon :icon="['fal', 'check']" @click="saveImage()" />
+                <div class="image recipe-image-edit" v-bind:style="savedRecipe.details.imageStyle"></div>
+                <input v-if="edit.details && !imageUploading" style="width: auto; margin: 15px 0 0 -5px;" type="file" id="newImage" ref="newImage" name="image" @change="imageOnChange" />
+                <span style="margin: 15px 0;" class="link" v-if="edit.details && imageFiles.length > 0 && !imageUploading" @click="saveImage()">
+                  <font-awesome-icon :icon="['fal', 'check']" /> upload image
                 </span>
-                <input v-if="edit.details" style="display: inline; width: auto; margin: 15px 0 0 -5px;" type="file" id="newImage" ref="newImage" name="image" @change="imageOnChange" />
               </div>
               <div class="form-field">
                 <label>Name</label>
-                <input v-if="edit.details" type="text" name="name" v-model="savedRecipe.name" />
-                <div v-if="!edit.details">{{savedRecipe.name.length > 0 ? savedRecipe.name : 'none'}}</div>
+                <input v-if="edit.details" type="text" name="name" v-model="savedRecipe.details.name" />
+                <div v-if="!edit.details">{{savedRecipe.details.name.length > 0 ? savedRecipe.details.name : 'none'}}</div>
               </div>
               <div class="form-field">
                 <label>Description</label>
-                <textarea v-if="edit.details" name="description" v-model="savedRecipe.description"></textarea>
-                <div v-if="!edit.details">{{savedRecipe.description.length > 0 ? savedRecipe.description : 'none'}}</div>
+                <textarea v-if="edit.details" name="description" v-model="savedRecipe.details.description"></textarea>
+                <div v-if="!edit.details">{{savedRecipe.details.description.length > 0 ? savedRecipe.details.description : 'none'}}</div>
               </div>
               <div class="columns">
                 <div class="form-field">
                   <label>Serves</label>
-                  <input v-if="edit.details" type="number" name="serves" v-model="savedRecipe.serves" min="1" />
-                  <div v-if="!edit.details">{{savedRecipe.serves}}</div>
+                  <input v-if="edit.details" type="number" name="serves" v-model="savedRecipe.details.serves" min="1" />
+                  <div v-if="!edit.details">{{savedRecipe.details.serves}}</div>
                 </div>
                 <div class="form-field">
                   <label>Tags</label>
                   <font-awesome-icon v-if="edit.details && newTag.length > 0" :icon="['fal', 'plus']" @click="addTag()" style="position: absolute; top: 32px; right: 10px;" class="float-right link" />
                   <input v-if="edit.details" type="text" name="newTag" v-model="newTag" />
                   <div v-bind:style="{'margin-top': (edit.details ? '10' : '0') + 'px'}">
-                    <span v-if="savedRecipe.tags.length == 0 && !edit.details">none</span>
-                    <span class="badge badge-dark badge-pill" v-for="(tag, index) in savedRecipe.tags" v-bind:key="index">
+                    <span v-if="savedRecipe.details.tags.length == 0 && !edit.details">none</span>
+                    <span class="badge badge-dark badge-pill" v-for="(tag, index) in savedRecipe.details.tags" v-bind:key="index">
                       {{tag}}
                       <span class="link" v-if="edit.details" @click="removeTag(index)">
                         <font-awesome-icon :icon="['fal', 'trash']" />
@@ -90,25 +100,25 @@
                 </div>
                 <div class="form-field">
                   <label>Enabled</label>
-                  <font-awesome-icon v-if="edit.details" :icon="['fal', { true: 'toggle-on', false: 'toggle-off'}[savedRecipe.enabled]]" @click="savedRecipe.enabled = !savedRecipe.enabled" style="display: block;" class="link" />
-                  <div v-if="!edit.details">{{savedRecipe.enabled ? 'Yes' : 'No'}}</div>
+                  <font-awesome-icon v-if="edit.details" :icon="['fal', { true: 'toggle-on', false: 'toggle-off'}[savedRecipe.details.enabled]]" @click="savedRecipe.details.enabled = !savedRecipe.details.enabled" style="display: block;" class="link" />
+                  <div v-if="!edit.details">{{savedRecipe.details.enabled ? 'Yes' : 'No'}}</div>
                 </div>
               </div>
               <div class="source">
                 <div class="form-field full-width" v-show="!edit.details">
                   <label>Source</label>
                   <div>
-                    <a v-bind:href="savedRecipe.source.url" target="_blank" v-if="savedRecipe.source.url">{{savedRecipe.source.name}}</a>
-                    <span v-if="!savedRecipe.source.url">none</span>
+                    <a v-bind:href="savedRecipe.details.source.url" target="_blank" v-if="savedRecipe.details.source.url">{{savedRecipe.details.source.name}}</a>
+                    <span v-if="!savedRecipe.details.source.url">none</span>
                   </div>
                 </div>
                 <div class="form-field">
                   <label v-if="edit.details">Source Name</label>
-                  <input v-if="edit.details" type="text" name="name" v-model="savedRecipe.source.name" />
+                  <input v-if="edit.details" type="text" name="name" v-model="savedRecipe.details.source.name" />
                 </div>
                 <div class="form-field" v-if="edit.details">
                   <label>Source URL</label>
-                  <input type="text" name="source-url" v-model="savedRecipe.source.url" min="1" />
+                  <input type="text" name="source-url" v-model="savedRecipe.details.source.url" min="1" />
                 </div>
               </div>
             </div>
@@ -116,28 +126,26 @@
               <div class="ingredients" v-bind:class="{'edit': edit.ingredients}">
                 <h5>
                   <span>Ingredients</span>
-                  <span class="float-right link" @click="editComponent('ingredients')">
-                    {{edit.ingredients ? 'save' : 'edit'}} <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.ingredients]]" />
+                  <span class="float-right link" v-if="recipe !== 'add'" @click="editComponent('ingredients')">
+                    <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.ingredients]]" /> {{edit.ingredients ? 'save' : 'edit'}}
                   </span>
                 </h5>
-                <div v-if="edit.ingredients">
+                <div style="margin-bottom: 15px;" v-if="edit.ingredients">
                   <span @click="addIngredient()" class="link">
-                    add component <font-awesome-icon :icon="['fal', 'plus']" />
+                    <font-awesome-icon :icon="['fal', 'plus']" /> add component
                   </span>
                 </div>
                 <div class="empty" v-if="savedRecipe.ingredients.length === 0">
                   no ingredients to show
                 </div>
                 <div v-for="(ingredients, component) in savedRecipe.ingredients" v-bind:key="component">
-                  <div class="ingredient-component" v-if="savedRecipe.ingredients.length > 0">
+                  <div class="ingredient-component" v-if="edit.ingredients && savedRecipe.ingredients.length > 0">
                     <div v-if="edit.ingredients" class="form-field component-name">
                       <label>Component</label>
                       <input type="text" v-bind:name="'ingredient-component-' + component" v-bind:disabled="savedRecipe.ingredients.length === 1" v-model="ingredients.component" />
                     </div>
-                    <div class="form-field delete">
-                      <div class="link" v-if="edit.ingredients" @click="removeIngredient(component)">
-                        <font-awesome-icon :icon="['fal', 'trash']" />
-                      </div>
+                    <div class="link" v-if="edit.ingredients" @click="removeIngredient(component)">
+                      <font-awesome-icon :icon="['fal', 'trash']" /> delete
                     </div>
                   </div>
                   <div class="component" v-if="!edit.ingredients">
@@ -151,7 +159,7 @@
                     <div v-for="(ingredient, index) in ingredients.list" v-bind:key="index">
                       <div class="form-field quantity">
                         <label v-if="index === 0">Quantity</label>
-                        <input type="number" v-bind:name="'ingredient-quantity-' + component + '-' + index" v-model="ingredient.quantity" min="0" />
+                        <input type="number" v-bind:name="'ingredient-quantity-' + component + '-' + index" v-model="ingredient.quantity" min="0"  @change="ingredient.quantity == 0 ? removeIngredient(component, index) : null" />
                       </div>
                       <div class="form-field unit">
                         <label v-if="index === 0">Unit</label>
@@ -161,16 +169,11 @@
                         <label v-if="index === 0">Description</label>
                         <input type="text" v-bind:name="'ingredient-description-' + component + '-' + index" v-model="ingredient.description" />
                       </div>
-                      <div class="form-field delete">
-                        <div class="link" v-if="edit.ingredients" @click="removeIngredient(component, index)">
-                          <font-awesome-icon :icon="['fal', 'trash']" />
-                        </div>
-                      </div>
                     </div>
                   </div>
-                  <div>
+                  <div style="margin: 15px 0;">
                     <span v-if="edit.ingredients" @click="addIngredient(ingredients.component)" class="link">
-                      add ingredient <font-awesome-icon :icon="['fal', 'plus']" />
+                      <font-awesome-icon :icon="['fal', 'plus']" /> add ingredient
                     </span>
                   </div>
                   <div class="empty" v-if="ingredients.list.length === 0">
@@ -181,13 +184,13 @@
               <div class="steps" v-bind:class="{'edit': edit.steps}">
                 <h5>
                   <span>Steps</span>
-                  <span class="float-right link" @click="editComponent('steps')">
-                    {{edit.steps ? 'save' : 'edit'}} <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.steps]]" />
+                  <span class="float-right link" v-if="recipe !== 'add'" @click="editComponent('steps')">
+                    <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.steps]]" /> {{edit.steps ? 'save' : 'edit'}}
                   </span>
                 </h5>
-                <div v-if="edit.steps">
+                <div style="margin-bottom: 15px;" v-if="edit.steps">
                   <span @click="addStep()" class="link">
-                    add step <font-awesome-icon :icon="['fal', 'plus']" />
+                    <font-awesome-icon :icon="['fal', 'plus']" /> add step
                   </span>
                 </div>
                 <div class="empty" v-if="savedRecipe.steps.length === 0">
@@ -211,24 +214,25 @@
                     <input type="number" v-bind:name="'step-setupduration-' + index" v-if="edit.steps && step.parallel" v-model="step.setupDuration" min="1" />
                   </div>
                   <span class="float-right link" v-if="edit.steps" @click="removeStep(index)">
-                    delete <font-awesome-icon :icon="['fal', 'trash']" v-if="edit.steps" />
+                    <font-awesome-icon :icon="['fal', 'trash']" v-if="edit.steps" /> delete
                   </span>
                   <div class="form-field description">
                     <label>Description</label>
-                    <div :contenteditable="edit.steps ? true : false">{{step.description}}</div>
+                    <div v-if="!edit.steps">{{step.description}}</div>
+                    <textarea v-if="edit.steps" v-bind:name="'step-description-' + index" v-model="step.description" rows="3"></textarea>
                   </div>
-                  <div class="form-field ingredients-used">
-                    <label v-if="step.ingredientsUsed || edit.steps">Ingredients Used</label>
-                    <select name="assignIngredient" v-model="selectedIngredient" v-if="edit.steps" @change="assignIngredient(index)">
+                  <div class="form-field ingredients-used" v-if="edit.steps">
+                    <label>Ingredients Used</label>
+                    <select name="assignIngredient" v-model="selectedIngredient" v-if="edit.steps && ingredientsForSteps.length > 0" @change="assignIngredient(index)">
                       <option value="">select an ingredient</option>
                       <option v-bind:value="ingredient" v-for="(ingredient, stepIngredient) in ingredientsForSteps" v-bind:key="stepIngredient">{{ingredient.componentName}} - {{ingredient.description}}</option>
                     </select>
                     <div v-if="edit.steps">
+                      <div v-if="ingredientsForSteps.length == 0">All ingredients have been allocated.</div>
                       <span v-for="(ingredient, ingredientIndex) in step.ingredientsUsed" v-bind:key="ingredientIndex">
                         <span style="margin: 10px 10px 0 0;" class="badge badge-light badge-pill" v-if="findIngredient(ingredient)">
-                          <input v-if="ingredient.quantity" class="badge-input" type="number" min="0" :max="findIngredient(ingredient).quantity" v-model="ingredient.quantity" />
-                          {{findIngredient(ingredient).unit}}
-                          {{findIngredient(ingredient).description}}
+                          <input v-if="ingredient.quantity" class="badge-input" type="number" min="0" :max="findIngredient(ingredient).quantity" v-model="ingredient.quantity" @change="ingredient.quantity == 0 ? removeIngredientUsed(index, ingredientIndex) : null" />
+                          {{findIngredient(ingredient).unit}}, {{findIngredient(ingredient).description}}
                           <span class="link" v-if="edit.steps" @click="removeIngredientUsed(index, ingredientIndex)">
                             <font-awesome-icon :icon="['fal', 'trash']" />
                           </span>
@@ -238,20 +242,15 @@
                   </div>
                   <div class="form-field depends-on" v-if="index > 0">
                     <label v-if="step.dependsOn || edit.steps">Depends On</label>
-                    <div v-if="step.dependsOn && !edit.steps">
-                      <span class="badge badge-light badge-pill" v-for="(dependency, dependencyIndex) in step.dependsOn" v-bind:key="dependencyIndex">step {{dependency + 1}}</span>
-                    </div>
                     <select name="addDependent" v-model="selectedDependency" v-if="edit.steps" @change="addDependency(index)">
                       <option value="">select a step</option>
                       <option v-bind:value="stepDependency" v-show="stepDependency < index" v-for="(dependency, stepDependency) in savedRecipe.steps" v-bind:key="stepDependency">{{stepDependency + 1}} - {{dependency.description}}</option>
                     </select>
-                    <div v-if="edit.steps">
-                      <span v-for="(dependency, dependencyIndex) in step.dependsOn" v-bind:key="dependencyIndex">
-                        <span style="margin: 10px 10px 0 0;" class="badge badge-light badge-pill">
-                          step {{dependency + 1}}
-                          <span class="link" v-if="edit.steps" @click="removeDependency(index, dependencyIndex)">
-                            <font-awesome-icon :icon="['fal', 'trash']" />
-                          </span>
+                    <div v-if="step.dependsOn">
+                      <span style="margin: 10px 10px 0 0;" class="badge badge-light badge-pill" v-for="(dependency, dependencyIndex) in step.dependsOn" v-bind:key="dependencyIndex">
+                        step {{dependency + 1}}
+                        <span class="link" v-if="edit.steps" @click="removeDependency(index, dependencyIndex)">
+                          <font-awesome-icon :icon="['fal', 'trash']" />
                         </span>
                       </span>
                     </div>
@@ -290,6 +289,7 @@ export default {
       },
       imageFiles: [],
       imageStyle: {},
+      imageUploading: false,
       newTag: '',
       selectedIngredient: '',
       selectedDependency: ''
@@ -302,14 +302,9 @@ export default {
     isAdmin: function(){
       return this.user && !this.user.isAnonymous;
     },
-    recipes: function(){
-      return this.$store.state.recipes;
-    },
-    recipe: function(){
-      return this.$store.state.recipe;
-    },
     ingredientsForSteps: function(){
-      var ingredients = [];
+      var that = this, ingredients = [], ingredientsForSteps = [];
+
       for(var i=0; i < this.savedRecipe.ingredients.length; i++){
         var component = this.savedRecipe.ingredients[i];
         for(var j=0; j < component.list.length; j++){
@@ -320,7 +315,27 @@ export default {
           ingredients.push(ingredient);
         }
       }
-      return ingredients;
+
+      for(var k=0; k < ingredients.length; k++){
+        var ingredientAdded = ingredients[k];
+        ingredientAdded.quantity -= checkIfUsed(ingredientAdded).quantity;
+        if(ingredientAdded.quantity > 0) ingredientsForSteps.push(ingredientAdded);
+      }
+
+      function checkIfUsed(ingredient){
+        var ingredientUsed = {quantity: 0};
+        for(var l=0; l < that.savedRecipe.steps.length;l++){
+          var step = that.savedRecipe.steps[l];
+          for(var m=0; m < step.ingredientsUsed.length; m++){
+            var sameComponent = step.ingredientsUsed[m].component == ingredient.component;
+            var sameIngredient = step.ingredientsUsed[m].ingredient == ingredient.ingredient;
+            if(sameComponent && sameIngredient) ingredientUsed.quantity += parseInt(step.ingredientsUsed[m].quantity);
+          }
+        }
+        return ingredientUsed;
+      }
+
+      return ingredientsForSteps;
     }
   },
   methods: {
@@ -333,17 +348,19 @@ export default {
         }
       }, 100);
     },
-    editRecipe: function(id, redirect){
-      if(redirect) this.$router.push({ name: 'admin', params: { recipe: id }});
-
+    editRecipe: function(id){
       if(id && this.recipes){
-        this.savedRecipe = this.recipes[id];
+        this.savedRecipe = this.clone(this.recipes[id]);
       }else{
         this.savedRecipe = null;
+        this.edit = {
+          details: false,
+          ingredients: false,
+          steps: false
+        };
       }
     },
     addRecipe: function(){
-      this.$router.push({ name: 'admin', params: { recipe: 'add' }});
       this.savedRecipe = this.template();
       this.edit = {
         details: true,
@@ -351,16 +368,29 @@ export default {
         steps: true
       };
     },
-    editComponent: function(component){
-      this.edit[component] = !this.edit[component];
-      if(!this.edit[component]) console.log('save changes', component);
+    saveRecipe: function(){
+      this.$store.dispatch('saveRecipe', this.savedRecipe);
+    },
+    deleteRecipe: function(){
+      if(confirm('Are you sure you want to delete "' + this.savedRecipe.details.name + '"?')){
+        this.$store.dispatch('deleteRecipe');
+      }
+    },
+    editComponent: function(component, noToggle){
+      if(!noToggle) this.edit[component] = !this.edit[component];
+
+      if(!this.edit[component] || noToggle){
+        var data = {};
+        data[component] = this.savedRecipe[component];
+        this.$store.dispatch('saveRecipe', data);
+      }
     },
     addTag: function(){
-      this.savedRecipe.tags.push(this.newTag);
+      this.savedRecipe.details.tags.push(this.newTag);
       this.newTag = '';
     },
     removeTag: function(index){
-      this.savedRecipe.tags.splice(index, 1);
+      this.savedRecipe.details.tags.splice(index, 1);
     },
     imageOnChange: function(){
       this.imageFiles = this.$refs.newImage.files;
@@ -369,20 +399,27 @@ export default {
       var reader = new FileReader();
       var url = 'recipe-photos/' + this.imageFiles[0].name;
       var ref = fb.storage.ref(url);
-      var component = this;
+      var that = this;
+
+      this.$store.commit('setUserMessage', { text: 'uploading image', type: 'text-info' });
+      this.imageUploading = true;
 
       reader.readAsDataURL(this.imageFiles[0]);
 
       reader.onload = function () {
-        ref.putString(reader.result, 'data_url').then(function(snapshot) {
-          console.log(snapshot);
-          component.savedRecipe.image = url;
-          component.imageFiles = [];
+        ref.putString(reader.result, 'data_url').then(function() {
+          that.imageUploading = false;
+          that.imageFiles = [];
+          that.savedRecipe.details.image = url;
+          that.getImage(that.savedRecipe);
+          that.editComponent('details', true)
+          that.$store.commit('setUserMessage', { text: 'imaged successfully uploaded', type: 'text-success' });
         });
       };
 
       reader.onerror = function (error) {
         console.log('Error uploading image', error);
+        that.$store.commit('setUserMessage', { text: 'issue uploading image', type: 'text-danger' });
       };
     },
     addIngredient: function(componentName){
@@ -408,7 +445,6 @@ export default {
       this.savedRecipe.steps.splice(index, 1);
     },
     assignIngredient: function(stepIndex){
-      if(!this.savedRecipe.steps[stepIndex].ingredientsUsed) this.savedRecipe.steps[stepIndex].ingredientsUsed = [];
       var ingredient = {
         component: this.selectedIngredient.component,
         ingredient: this.selectedIngredient.ingredient,
@@ -431,8 +467,6 @@ export default {
     },
     removeIngredientUsed: function(stepIndex, ingredientIndex){
       this.savedRecipe.steps[stepIndex].ingredientsUsed.splice(ingredientIndex, 1);
-      if(this.savedRecipe.steps[stepIndex].ingredientsUsed.length == 0) delete this.savedRecipe.steps[stepIndex].ingredientsUsed;
-      console.log(this.savedRecipe.steps[stepIndex].ingredientsUsed, ingredientIndex);
     },
     removeDependency: function(stepIndex, dependencyIndex){
       this.savedRecipe.steps[stepIndex].dependsOn.splice(dependencyIndex, 1);
@@ -450,7 +484,7 @@ export default {
         case 'ingredient':
           template = {
             description: '',
-            quantity: '',
+            quantity: 1,
             unit: ''
           };
           break;
@@ -460,24 +494,27 @@ export default {
             duration: 1,
             parallel: false,
             setupDuration: null,
+            ingredientsUsed: [],
             dependsOn: null
           };
           break;
         default:
           template = {
-            name: '',
-            description: '',
-            image: '',
-            imageStyle: this.imageStyle,
-            tags: [],
-            serves: 1,
-            source: {
+            details: {
               name: '',
-              url: ''
+              description: '',
+              image: '',
+              imageStyle: this.imageStyle,
+              tags: [],
+              serves: 1,
+              source: {
+                name: '',
+                url: ''
+              },
+              enabled: true
             },
             ingredients: [],
-            steps: [],
-            enabled: true
+            steps: []
           };
           break;
       }
@@ -497,6 +534,12 @@ export default {
       if(this.recipe == 'add') this.savedRecipe = template;
       else this.waitForRecipes();
     }
+  },
+  watch: {
+    $route(to){
+      if(to.params.recipe == 'add') this.addRecipe();
+      else this.editRecipe(to.params.recipe);
+    }
   }
 }
 </script>
@@ -505,6 +548,9 @@ export default {
 .admin {
   position: relative;
   padding: 20px;
+  h4 {
+    display: inline-block;
+  }
 }
 
 h5 {
@@ -516,59 +562,6 @@ h5 {
 
 .fa-toggle-on, .fa-toggle-off {
   font-size: 2em;
-}
-
-form {
-  label {
-    display: inline;
-    width: 100%;
-    font-weight: normal;
-    text-transform: uppercase;
-    font-size: 0.7em;
-    margin-bottom: 2px;
-  }
-  input, textarea, select {
-    display: block;
-    width: 100%;
-    padding: 3px 5px;
-  }
-  .form-field {
-    position: relative;
-    margin-bottom: 15px;
-    &.half-width {
-      width: 50%;
-    }
-    .checkbox {
-      font-size: 1.5em;
-      margin: 5px 0 0 0;
-    }
-    .btn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-    }
-  }
-  .half-width {
-		.form-field {
-			display: inline-block;
-			box-sizing: border-box;
-			width: 50%;
-			margin: 0 -3px 15px 0;
-      vertical-align: top;
-			+ .form-field {
-				margin: 0 0 15px -3px;
-			}
-		}
-	}
-  .edit {
-    background-color: #eee;
-    padding: 15px;
-    > div {
-      &:nth-child(1){
-        margin-bottom: 15px;
-      }
-    }
-  }
 }
 
 .details {
@@ -638,6 +631,7 @@ form {
       grid-column-end: 2;
       grid-row-start: 2;
       grid-row-end: 6;
+      height: 100%;
     }
   }
 }
@@ -691,6 +685,9 @@ form {
       grid-column-start: 1;
       grid-column-end: 6;
       grid-row-start: 3;
+      .badge {
+        font-weight: normal;
+      }
     }
     .depends-on {
       grid-column-start: 1;
@@ -716,35 +713,6 @@ form {
           background-color: #f7f7f7;
         }
       }
-    }
-  }
-}
-
-.image {
-  background-size: cover;
-  background-position: center center;
-  &.recipe-image-edit {
-    width: 100%;
-    height: 300px;
-    border: 1px solid #ccc;
-  }
-  &.directory-image {
-    position: relative;
-    width: 100%;
-    height: 200px;
-    cursor: pointer;
-    > .status {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      background: url('../assets/img/bg-black-50.png');
-      padding: 8px 15px;
-      color: white;
-    }
-    > button {
-      position: absolute;
-      bottom: 0;
-      right: 0;
     }
   }
 }
@@ -779,7 +747,7 @@ form {
   }
   > div {
     display: grid;
-    grid-template-columns: 60px 100px auto 20px;
+    grid-template-columns: 60px 100px auto;
     grid-auto-rows: minmax(10px, auto);
     .quantity {
       grid-column-start: 1;
@@ -793,41 +761,19 @@ form {
       grid-column-start: 3;
       grid-column-end: 4;
     }
-    .delete {
-      position: relative;
-      grid-column-start: 4;
-      grid-column-end: 5;
-      justify-self: end;
-      align-self: end;
-      > .link {
-        position: absolute;
-        bottom: 7px;
-        right: 0px;
-      }
-    }
   }
 }
 
 .ingredient-component {
   display: grid;
-  grid-template-columns: auto 20px;
+  grid-template-columns: auto;
   grid-auto-rows: minmax(10px, auto);
+  margin-bottom: 20px;
   .form-field {
     &.component-name {
       grid-column-start: 1;
       grid-column-end: 2;
-    }
-    &.delete {
-      position: relative;
-      grid-column-start: 2;
-      grid-column-end: 3;
-      justify-self: end;
-      align-self: end;
-      > .link {
-        position: absolute;
-        bottom: 7px;
-        right: 0px;
-      }
+      margin-bottom: 5px;
     }
   }
 }

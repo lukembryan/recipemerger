@@ -10,9 +10,14 @@ export default new Vuex.Store({
   state: {
     user: null,
     recipe: '',
+    currentRecipe: null,
     recipes: null,
     page: '',
-    scrolledDown: false
+    scrolledDown: false,
+    userMessage: {
+      text: '',
+      type: ''
+    }
   },
   mutations: {
     setUser: function(state, user){
@@ -20,6 +25,13 @@ export default new Vuex.Store({
     },
     setRecipe: function(state, recipe){
       state.recipe = recipe;
+
+      var recipesCheck = setInterval(function(){
+        if(state.recipes){
+          clearInterval(recipesCheck);
+          state.currentRecipe = state.recipes[state.recipe];
+        }
+      }, 100);
     },
     setRecipes: function(state, recipes){
       state.recipes = recipes;
@@ -29,6 +41,9 @@ export default new Vuex.Store({
     },
     setScrolledDown: function(state, scrolledDown){
       state.scrolledDown = scrolledDown;
+    },
+    setUserMessage: function(state, userMessage){
+      state.userMessage = userMessage;
     }
   },
   actions: {
@@ -75,7 +90,27 @@ export default new Vuex.Store({
         });
         commit('setRecipes', recipes);
       }).catch(function(error) {
-        console.log('Error getting documents: ', error);
+        console.log(error);
+        commit('setUserMessage', { text: 'issue loading recipes', type: 'text-danger' });
+      });
+    },
+    saveRecipe: function({state, commit}, component){
+      commit('setUserMessage', { text: 'saving recipe', type: 'text-info' });
+      var ref = fb.recipes.doc(state.recipe).update(component);
+      if(state.recipe === 'add') ref = fb.recipes.doc().set(component);
+      ref.then(function() {
+        commit('setUserMessage', { text: 'recipe saved', type: 'text-success' });
+      }).catch(function(error) {
+        console.log(error);
+        commit('setUserMessage', { text: 'issue saving recipe', type: 'text-danger' });
+      });
+    },
+    deleteRecipe: function({state, commit}){
+      fb.recipes.doc(state.recipe).delete().then(function() {
+        commit('setUserMessage', { text: 'recipe deleted', type: 'text-success' });
+      }).catch(function(error) {
+        console.log(error);
+        commit('setUserMessage', { text: 'issue deleting recipe', type: 'text-danger' });
       });
     }
   }

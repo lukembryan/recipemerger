@@ -34,6 +34,7 @@ export default {
       left: 0;
     }
     > input {
+      display: inline;
       background-color: transparent;
       border: none;
       padding: 0;

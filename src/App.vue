@@ -1,6 +1,7 @@
 <template>
   <div id="layout" :class="page">
-    <header v-bind:class="{'compact': scrolledDown}">
+    <user-message />
+    <header v-bind:class="{'compact': scrolledDown}" v-if="page != 'home'">
       <h1 v-if="page != 'home'">
         <img src="/img/logo.png" />
         <router-link to="/" @click="showMenu = false">sizzle</router-link>
@@ -15,7 +16,6 @@
               <router-link :to="link.path">{{link.label}}</router-link>
             </li>
             <li v-if="isAdmin" v-bind:class="{'active': page == 'admin'}">
-              <hr style="border-color: white;" />
               <router-link to="/admin">admin</router-link>
             </li>
           </ul>
@@ -23,17 +23,21 @@
       </div>
       <div v-if="showMenu" class="overlay" @click="showMenu = false"></div>
     </header>
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
 <script>
+import mixins from './mixins.js';
 import search from '@/components/search.vue';
+import userMessage from '@/components/user-message.vue';
 
 export default {
   name: 'layout',
+  mixins: [mixins],
   components: {
-    search
+    search,
+    userMessage
   },
   data: function(){
     return {
@@ -46,9 +50,6 @@ export default {
     };
   },
   computed: {
-    page: function(){
-      return this.$store.state.page;
-    },
     scrolledDown: function(){
       return this.$store.state.scrolledDown;
     },
@@ -103,6 +104,9 @@ a, .link {
     text-decoration: none;
     color: lighten(@brown, 20%);
   }
+  > svg {
+    margin-right: 5px !important;
+  }
 }
 
 .badge {
@@ -118,6 +122,7 @@ a, .link {
     padding: 2px;
     border-radius: 20px 0 0 20px;
     border: 1px solid #aaa;
+    text-align: right;
   }
 }
 
@@ -157,7 +162,7 @@ h3 {
 }
 
 h4 {
-  padding-bottom: 15px;
+  margin-bottom: 15px;
   font-size: 1.4em;
 }
 
@@ -187,6 +192,13 @@ h6 {
   padding: 0 0 15px;
 }
 
+.image {
+  background-size: cover;
+  background-position: center center;
+  width: 100%;
+  height: 300px;
+}
+
 #layout {
   display: grid;
   grid-template-columns: 100%;
@@ -205,17 +217,17 @@ h6 {
     grid-row-end: 2;
     grid-template-columns: 2fr 6fr;
     grid-template-rows: 100%;
-    background-color: transparent;
+    background-color: #fff;
     padding: 20px;
     top: 0;
     width: 100%;
     height: 70px;
+    border-bottom: 5px solid #eee;
     transition: all ease-in-out 0.3s;
     z-index: 1;
     &.compact {
       padding: 10px 20px;
       height: 50px;
-      background-color: white;
       h1 {
         font-size: 2.4em;
         line-height: 0.9;
@@ -309,12 +321,67 @@ h6 {
     grid-row-start: 2;
     grid-column-start: 1;
     display: grid;
-    grid-template-rows: 70px auto;
+    grid-template-rows: 50px auto;
     grid-template-columns: 100%;
     &.home {
       grid-template-columns: 2fr 3fr;
       grid-row-start: 1;
     }
+    &.browse {
+      grid-template-columns: 2fr 3fr;
+      grid-row-start: 2;
+    }
   }
+}
+
+form {
+  label {
+    display: inline;
+    width: 100%;
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: 0.7em;
+    margin-bottom: 2px;
+  }
+  input, textarea, select {
+    display: block;
+    width: 100%;
+    padding: 3px 5px;
+  }
+  .form-field {
+    position: relative;
+    margin-bottom: 15px;
+    .checkbox {
+      font-size: 1.5em;
+      margin: 5px 0 0 0;
+    }
+    .btn {
+      &.btn-text {
+        padding: 0;
+        background: none;
+        border: none;
+      }
+    }
+  }
+  .edit {
+    background-color: #eee;
+    padding: 15px;
+    > div {
+      &:nth-child(1){
+        margin-bottom: 15px;
+      }
+    }
+  }
+}
+
+@-webkit-keyframes rotation {
+	from {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+	to {
+		-webkit-transform: rotate(359deg);
+		transform: rotate(359deg);
+	}
 }
 </style>

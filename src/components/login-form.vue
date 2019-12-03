@@ -1,17 +1,21 @@
 <template>
   <div id="login-form" v-bind:class="{'is-admin': isAdmin}">
-    <span id="logout" class="link" @click="logOut()" v-if="isAdmin">log out</span>
+    <span id="logout" class="link" @click="logOut()" v-if="isAdmin">
+      <font-awesome-icon :icon="['fal', 'sign-out']" /> log out
+    </span>
     <form name="loginForm" v-on:submit="submit" v-if="!isAdmin">
-      <div class="form-group">
+      <div class="form-field">
         <label>Email</label>
         <input class="form-control" type="email" name="email" v-model="credentials.email" />
       </div>
-      <div class="form-group">
+      <div class="form-field">
         <label>Password</label>
         <input class="form-control" type="password" name="password" v-model="credentials.password" />
       </div>
       <div class="form-field">
-        <button class="btn btn-primary" type="submit">Submit</button>
+        <button class="link btn btn-text" type="submit">
+          <font-awesome-icon :icon="['fal', 'sign-in']" /> log in
+        </button>
       </div>
     </form>
   </div>
@@ -37,17 +41,23 @@ export default {
   methods: {
     submit: function(e){
       e.preventDefault();
-      fb.auth.signInWithEmailAndPassword(this.credentials.email, this.credentials.password).catch(function(error) {
-        console.log('signInWithEmailAndPassword', error);
+      var that = this;
+      this.$store.commit('setUserMessage', { text: 'signing in', type: 'text-info' });
+      fb.auth.signInWithEmailAndPassword(this.credentials.email, this.credentials.password).then(function() {
+        that.$store.commit('setUserMessage', { text: 'logged in!', type: 'text-success' });
+      }).catch(function(error) {
+        console.log(error);
+        that.$store.commit('setUserMessage', { text: 'issue logging in', type: 'text-danger' });
       });
     },
     logOut: function(){
+      var that = this;
+      this.$store.commit('setUserMessage', { text: 'logging out', type: 'text-info' });
       fb.auth.signOut().then(function() {
-        console.log('logged out');
-        // Sign-out successful.
+        that.$store.commit('setUserMessage', { text: 'successfully logged out', type: 'text-success' });
       }).catch(function(error) {
-        console.log('not logged out', error);
-        // An error happened.
+        console.log(error);
+        that.$store.commit('setUserMessage', { text: 'issue logging out', type: 'text-danger' });
       });
     }
   }
@@ -63,6 +73,8 @@ export default {
     top: 20px;
     right: 20px;
   }
-  form {}
+  form {
+    width: 250px;
+  }
 }
 </style>
