@@ -84,6 +84,10 @@ export default {
 <style lang="less">
 @import 'assets/less/shared.less';
 
+html, body {
+  height: 100%;
+}
+
 body {
   color: @purple;
   font-size: 16px;
@@ -179,6 +183,22 @@ h6 {
   margin: 20px 0 15px;
 }
 
+.btn {
+  border-radius: 0;
+  border: 3px solid @brown;
+  color: #fff;
+  background-color: lighten(@brown, 10%);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  &:hover, &:focus, &:active, &.active {
+    color: #fff;
+    background-color: lighten(@brown, 20%);
+  }
+  > .svg-inline--fa {
+    margin: 0px 5px 0px 0px;
+  }
+}
+
 .svg-inline--fa {
   margin: 0px 0 -1px 3px;
 }
@@ -193,6 +213,7 @@ h6 {
 }
 
 .image {
+  position: relative;
   background-size: cover;
   background-position: center center;
   width: 100%;
@@ -203,6 +224,7 @@ h6 {
   display: grid;
   grid-template-columns: 100%;
   grid-template-rows: 70px auto;
+  height: 100%;
   &.home {
     > header {
       &.compact {
@@ -320,8 +342,6 @@ h6 {
   .content {
     grid-row-start: 2;
     grid-column-start: 1;
-    display: grid;
-    grid-template-rows: 50px auto;
     grid-template-columns: 100%;
     &.home {
       grid-template-columns: 2fr 3fr;

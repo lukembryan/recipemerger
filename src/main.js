@@ -9,13 +9,17 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {
   faSearch, faBars, faTimes, faEdit, faPlus,
   faToggleOn, faToggleOff, faCheck, faClock,
-  faTrash, faSignOut, faSignIn, faExclamation, faSyncAlt
+  faTrash, faSignOut, faSignIn, faExclamation,
+  faSyncAlt, faChevronLeft, faChevronUp,
+  faChevronDown, faHatChef, faKeyboard
 } from '@fortawesome/pro-light-svg-icons';
 
 library.add(
   faSearch, faBars, faTimes, faEdit, faPlus,
   faToggleOn, faToggleOff, faCheck, faClock,
-  faTrash, faSignOut, faSignIn, faExclamation, faSyncAlt
+  faTrash, faSignOut, faSignIn, faExclamation,
+  faSyncAlt, faChevronLeft, faChevronUp,
+  faChevronDown, faHatChef, faKeyboard
 );
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);

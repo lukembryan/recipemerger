@@ -1,39 +1,43 @@
 <template>
   <div class="recipe content">
-    <div v-if="recipe">
-      <router-link :to="{ name: 'browse', params: {}}" class="link">
-        <font-awesome-icon :icon="['fal', 'times']" />
-      </router-link>
-      <div class="image" v-bind:style="recipe.details.imageStyle"></div>
+    <div v-if="currentRecipe">
       <div class="details">
-        <h2>{{recipe.details.name}}</h2>
-        <h3>{{recipe.details.description}}</h3>
-        <p v-if="recipe.details.source.name">
+        <router-link :to="{ name: 'browse', params: {}}" class="link">
+          <font-awesome-icon :icon="['fal', 'chevron-left']" /> back
+        </router-link>
+        <h2>{{currentRecipe.details.name}}</h2>
+        <h3>{{currentRecipe.details.description}}</h3>
+        <p v-if="currentRecipe.details.source.name">
           Original
-          <a v-bind:href="recipe.details.source.url" target="_blank" v-if="recipe.details.source.url">{{recipe.details.source.name}}</a>
+          <a v-bind:href="currentRecipe.details.source.url" target="_blank" v-if="currentRecipe.details.source.url">{{currentRecipe.details.source.name}}</a>
         </p>
         <p>
-          Serves <strong>{{recipe.details.serves}}</strong>
+          Serves <strong>{{currentRecipe.details.serves}}</strong>
         </p>
-        <p>
-          <span class="badge badge-dark badge-pill" v-for="(tag, index) in recipe.details.tags" v-bind:key="index">
+        <div>
+          <span class="badge badge-dark badge-pill" v-for="(tag, index) in currentRecipe.details.tags" v-bind:key="index">
             {{tag}}
           </span>
-        </p>
+        </div>
+      </div>
+      <div class="image" v-bind:style="currentRecipe.details.imageStyle">
+        <button class="btn" @click="cookRecipe()">
+          <font-awesome-icon :icon="['fal', 'hat-chef']" /> cook
+        </button>
       </div>
       <hr />
       <div class="ingredients">
         <h4>Ingredients</h4>
-        <div class="component" v-for="(ingredients, component) in recipe.ingredients" v-bind:key="component">
+        <div class="component" v-for="(ingredients, component) in currentRecipe.ingredients" v-bind:key="component">
           <table class="table table-sm">
             <tbody>
-              <tr>
+              <tr v-if="currentRecipe.ingredients.length > 1">
                 <td colspan="2">
-                  <h5 v-if="recipe.ingredients.length > 1">{{ingredients.component}}</h5>
+                  <h5>{{ingredients.component}}</h5>
                 </td>
               </tr>
               <tr v-for="(ingredient, index) in ingredients.list" v-bind:key="index">
-                <td style="width: 100px;">{{ingredient.quantity}} {{ingredient.unit}}</td>
+                <td class="quantity">{{ingredient.quantity}} {{ingredient.unit}}</td>
                 <td>{{ingredient.description}}</td>
               </tr>
             </tbody>
@@ -42,15 +46,15 @@
             no ingredients to show
           </div>
         </div>
-        <div class="empty" v-if="recipe.ingredients.length === 0">
+        <div class="empty" v-if="currentRecipe.ingredients.length === 0">
           no ingredients to show
         </div>
       </div>
       <div class="steps">
         <h4>Steps</h4>
-        <table class="table table-sm" v-if="recipe.steps.length > 0">
+        <table class="table table-sm" v-if="currentRecipe.steps.length > 0">
           <tbody>
-            <tr v-for="(step, index) in recipe.steps" v-bind:key="index">
+            <tr v-for="(step, index) in currentRecipe.steps" v-bind:key="index">
               <td style="width: 50px;">
                 <span class="badge badge-light badge-pill">{{index + 1}}</span>
               </td>
@@ -58,7 +62,7 @@
             </tr>
           </tbody>
         </table>
-        <div class="empty" v-if="recipe.steps.length === 0">
+        <div class="empty" v-if="currentRecipe.steps.length === 0">
           no steps to show
         </div>
       </div>
@@ -73,11 +77,16 @@ export default {
   name: 'recipe',
   mixins: [mixins],
   computed: {
-    recipe: function(){
+    currentRecipe: function(){
       return this.$store.state.currentRecipe;
     }
   },
-  methods: {}
+  methods: {
+    cookRecipe: function(){
+      localStorage.setItem('selectedRecipes', JSON.stringify([this.recipe]));
+      this.$router.push({ name: 'cook', params: {}});
+    }
+  }
 }
 </script>
 
@@ -88,32 +97,35 @@ export default {
     display: grid;
     grid-template-columns: 2fr 3fr;
     grid-gap: 30px;
-    > a {
-      position: absolute;
-      right: 30px;
-      font-size: 2em;
-      line-height: 1;
-    }
   }
 }
-.image {
-  -webkit-box-shadow: inset 0 0 10px #ddd;
-  box-shadow: inset 0 0 10px #ddd;
+.details {
   grid-column-start: 1;
   grid-column-end: 2;
-}
-.details {
-  grid-column-start: 2;
-  grid-column-end: 3;
+  > a {
+
+  }
   > h2 {
-    margin: 0 45px 20px 0;
-    font-size: 3em;
+    margin: 20px 45px 20px 0;
+    font-size: 2.5em;
     font-weight: 100;
     line-height: 1;
   }
   > h3 {
     font-weight: 100;
     margin: 0 0 20px;
+  }
+}
+.image {
+  -webkit-box-shadow: inset 0 0 10px #ddd;
+  box-shadow: inset 0 0 70px #eee;
+  border: 1px solid #ddd;
+  grid-column-start: 2;
+  grid-column-end: 3;
+  > .btn {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
   }
 }
 hr {
@@ -136,6 +148,10 @@ hr {
       border-bottom: none;
       margin-bottom: 0;
       margin-top: 15px;
+    }
+    .quantity {
+      width: 100px;
+      font-weight: 700;
     }
   }
 }
