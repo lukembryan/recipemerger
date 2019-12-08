@@ -6,7 +6,10 @@
         <img src="/img/logo.png" />
         <router-link to="/" @click="showMenu = false">sizzle</router-link>
       </h1>
-      <search v-if="page != 'home'" />
+      <search v-if="['browse'].indexOf(page) >= 0" />
+      <h2>
+        <font-awesome-icon :icon="['fal', 'hat-chef']" /> {{selectedRecipes[0].details.name}}
+      </h2>
       <div class="menu">
         <font-awesome-icon :icon="['fal', 'bars']" v-if="!showMenu && page != 'home'" @click="showMenu = true" class="link" />
         <div v-if="showMenu" id="menu-container">
@@ -55,6 +58,9 @@ export default {
     },
     isAdmin: function(){
       return this.$store.state.user && !this.$store.state.user.isAnonymous;
+    },
+    selectedRecipes: function(){
+      return this.$store.state.selectedRecipes;
     }
   },
   methods: {
@@ -65,18 +71,22 @@ export default {
       this.$store.dispatch('loadRecipes');
     }
   },
-  beforeMount () {
-    window.addEventListener('scroll', this.updateScroll);
-  },
-  beforeDestroy () {
-    window.removeEventListener('scroll', this.updateScroll);
-  },
   watch: {
     $route(to, from){
       this.showMenu = false;
       this.$store.dispatch('recipeLoaded', to.params.recipe);
       this.$store.dispatch('routeChanged', [from.name, to.name]);
     }
+  },
+  beforeMount () {
+    window.addEventListener('scroll', this.updateScroll);
+  },
+  created: function(){
+    var selectedRecipeIds = localStorage.getItem('selectedRecipes');
+    if(selectedRecipeIds) this.$store.dispatch('loadSelectedRecipes', JSON.parse(selectedRecipeIds));
+  },
+  beforeDestroy () {
+    window.removeEventListener('scroll', this.updateScroll);
   }
 };
 </script>
@@ -193,9 +203,17 @@ h6 {
   &:hover, &:focus, &:active, &.active {
     color: #fff;
     background-color: lighten(@brown, 20%);
+    box-shadow: none;
   }
-  > .svg-inline--fa {
-    margin: 0px 5px 0px 0px;
+  &.btn-disabled {
+    cursor: default;
+    color: initial;
+    border-color: transparent;
+    background-color: transparent;
+    pointer-events: none;
+  }
+  .svg-inline--fa {
+    margin: 0px 10px 0px 0px;
   }
 }
 
@@ -232,12 +250,19 @@ h6 {
       }
     }
   }
+  &.cook {
+    > header {
+      > h2 {
+        display: block;
+      }
+    }
+  }
   > header {
     position: fixed;
     display: grid;
     grid-row-start: 1;
     grid-row-end: 2;
-    grid-template-columns: 2fr 6fr;
+    grid-template-columns: 200px 300px auto 30px;
     grid-template-rows: 100%;
     background-color: #fff;
     padding: 20px;
@@ -271,14 +296,24 @@ h6 {
       transition: all ease-in-out 0.3s;
     }
     .search {
-      .screen-sm-max({
+      .screen-xs-max({
         display: none;
       });
     }
   }
+  h2 {
+    display: none;
+    line-height: 1;
+    font-weight: 100;
+    font-size: 1.6em;
+    margin-bottom: 0;
+    > svg {
+      margin-right: 10px;
+    }
+  }
   .menu {
     grid-row-start: 1;
-    grid-column-start: 3;
+    grid-column-start: 4;
     &.landing-panel {
       ul {
         > li {
@@ -344,12 +379,8 @@ h6 {
     grid-column-start: 1;
     grid-template-columns: 100%;
     &.home {
-      grid-template-columns: 2fr 3fr;
+      grid-template-columns: 350px auto;
       grid-row-start: 1;
-    }
-    &.browse {
-      grid-template-columns: 2fr 3fr;
-      grid-row-start: 2;
     }
   }
 }

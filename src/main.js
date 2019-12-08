@@ -11,7 +11,8 @@ import {
   faToggleOn, faToggleOff, faCheck, faClock,
   faTrash, faSignOut, faSignIn, faExclamation,
   faSyncAlt, faChevronLeft, faChevronUp,
-  faChevronDown, faHatChef, faKeyboard
+  faChevronDown, faHatChef, faKeyboard,
+  faArrowUp, faArrowDown
 } from '@fortawesome/pro-light-svg-icons';
 
 library.add(
@@ -19,7 +20,8 @@ library.add(
   faToggleOn, faToggleOff, faCheck, faClock,
   faTrash, faSignOut, faSignIn, faExclamation,
   faSyncAlt, faChevronLeft, faChevronUp,
-  faChevronDown, faHatChef, faKeyboard
+  faChevronDown, faHatChef, faKeyboard,
+  faArrowUp, faArrowDown
 );
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);

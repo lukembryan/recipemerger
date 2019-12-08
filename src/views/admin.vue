@@ -230,9 +230,9 @@
                     <div v-if="edit.steps">
                       <div v-if="ingredientsForSteps.length == 0">All ingredients have been allocated.</div>
                       <span v-for="(ingredient, ingredientIndex) in step.ingredientsUsed" v-bind:key="ingredientIndex">
-                        <span style="margin: 10px 10px 0 0;" class="badge badge-light badge-pill" v-if="findIngredient(ingredient)">
-                          <input v-if="ingredient.quantity" class="badge-input" type="number" min="0" :max="findIngredient(ingredient).quantity" v-model="ingredient.quantity" @change="ingredient.quantity == 0 ? removeIngredientUsed(index, ingredientIndex) : null" />
-                          {{findIngredient(ingredient).unit}}, {{findIngredient(ingredient).description}}
+                        <span style="margin: 10px 10px 0 0;" class="badge badge-light badge-pill" v-if="findIngredient(ingredient, savedRecipe)">
+                          <input v-if="ingredient.quantity" class="badge-input" type="number" min="0" :max="findIngredient(ingredient, savedRecipe).quantity" v-model="ingredient.quantity" @change="ingredient.quantity == 0 ? removeIngredientUsed(index, ingredientIndex) : null" />
+                          {{findIngredient(ingredient, savedRecipe).unit}}, {{findIngredient(ingredient, savedRecipe).description}}
                           <span class="link" v-if="edit.steps" @click="removeIngredientUsed(index, ingredientIndex)">
                             <font-awesome-icon :icon="['fal', 'trash']" />
                           </span>
@@ -452,13 +452,6 @@ export default {
       };
       this.savedRecipe.steps[stepIndex].ingredientsUsed.push(ingredient);
       this.selectedIngredient = '';
-    },
-    findIngredient: function(ingredient){
-      var foundIngredient = null;
-      if(this.savedRecipe.ingredients[ingredient.component]){
-        foundIngredient = this.savedRecipe.ingredients[ingredient.component].list[ingredient.ingredient];
-      }
-      return foundIngredient;
     },
     addDependency: function(stepIndex){
       if(!this.savedRecipe.steps[stepIndex].dependsOn) this.savedRecipe.steps[stepIndex].dependsOn = [];

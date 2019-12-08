@@ -11,6 +11,7 @@ export default new Vuex.Store({
     user: null,
     recipe: '',
     currentRecipe: null,
+    selectedRecipes: [],
     recipes: null,
     page: '',
     scrolledDown: false,
@@ -44,6 +45,9 @@ export default new Vuex.Store({
     },
     setUserMessage: function(state, userMessage){
       state.userMessage = userMessage;
+    },
+    setSelectedRecipes: function(state, selectedRecipes){
+      state.selectedRecipes = selectedRecipes;
     }
   },
   actions: {
@@ -112,6 +116,22 @@ export default new Vuex.Store({
         console.log(error);
         commit('setUserMessage', { text: 'issue deleting recipe', type: 'text-danger' });
       });
+    },
+    loadSelectedRecipes: function({state, commit}, selectedRecipeIds){
+      var selectedRecipes = [];
+
+      var recipesCheck = setInterval(function(){
+        if(state.recipes){
+          clearInterval(recipesCheck);
+
+          for(var i=0; i < selectedRecipeIds.length; i++){
+            var recipeInList = state.recipes[selectedRecipeIds[i]];
+            if(recipeInList) selectedRecipes.push(recipeInList);
+          }
+
+          commit('setSelectedRecipes', selectedRecipes);
+        }
+      }, 100);
     }
   }
 });

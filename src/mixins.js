@@ -29,6 +29,13 @@ export default {
         recipe.details.imageStyle = {'background-image': 'none'};
       });
     },
+    findIngredient: function(ingredient, recipe){
+      var foundIngredient = null;
+      if(recipe.ingredients[ingredient.component]){
+        foundIngredient = recipe.ingredients[ingredient.component].list[ingredient.ingredient];
+      }
+      return foundIngredient;
+    },
     clone: function(original){
       var copy = JSON.stringify(original);
       return JSON.parse(copy);
