@@ -12,7 +12,7 @@ import {
   faTrash, faSignOut, faSignIn, faExclamation,
   faSyncAlt, faChevronLeft, faChevronUp,
   faChevronDown, faHatChef, faKeyboard,
-  faArrowUp, faArrowDown
+  faArrowUp, faArrowDown, faUtensils
 } from '@fortawesome/pro-light-svg-icons';
 
 library.add(
@@ -21,7 +21,7 @@ library.add(
   faTrash, faSignOut, faSignIn, faExclamation,
   faSyncAlt, faChevronLeft, faChevronUp,
   faChevronDown, faHatChef, faKeyboard,
-  faArrowUp, faArrowDown
+  faArrowUp, faArrowDown, faUtensils
 );
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);

@@ -1,14 +1,23 @@
 <template>
   <div id="layout" :class="page">
+    <div class="responsive-test" v-if="dev">
+      <span>tiny</span>
+      <span>xxs</span>
+      <span>xs</span>
+      <span>sm</span>
+      <span>md</span>
+      <span>lg</span>
+      <span>xl</span>
+    </div>
     <user-message />
-    <header v-bind:class="{'compact': scrolledDown}" v-if="page != 'home'">
+    <header v-bind:class="{'compact': scrolledDown || page == 'cook'}" v-if="page != 'home'">
       <h1 v-if="page != 'home'">
         <img src="/img/logo.png" />
         <router-link to="/" @click="showMenu = false">sizzle</router-link>
       </h1>
       <search v-if="['browse'].indexOf(page) >= 0" />
-      <h2>
-        <font-awesome-icon :icon="['fal', 'hat-chef']" /> {{selectedRecipes[0].details.name}}
+      <h2 v-if="selectedRecipes[0]">
+        <font-awesome-icon :icon="['fal', 'utensils']" /> Estimated serving time 7:10 pm
       </h2>
       <div class="menu">
         <font-awesome-icon :icon="['fal', 'bars']" v-if="!showMenu && page != 'home'" @click="showMenu = true" class="link" />
@@ -44,6 +53,7 @@ export default {
   },
   data: function(){
     return {
+      dev: window.location.host == 'localhost:8080' ? true : false,
       showMenu: false,
       menu: [
         { label: 'browse', path: '/browse' },
@@ -81,10 +91,6 @@ export default {
   beforeMount () {
     window.addEventListener('scroll', this.updateScroll);
   },
-  created: function(){
-    var selectedRecipeIds = localStorage.getItem('selectedRecipes');
-    if(selectedRecipeIds) this.$store.dispatch('loadSelectedRecipes', JSON.parse(selectedRecipeIds));
-  },
   beforeDestroy () {
     window.removeEventListener('scroll', this.updateScroll);
   }
@@ -102,6 +108,29 @@ body {
   color: @purple;
   font-size: 16px;
   font-family: 'Titillium Web', sans-serif;
+}
+
+.responsive-test {
+  position: fixed;
+  top: 5px;
+  left: 5px;
+  background-color: white;
+  color: black;
+  border: 1px solid #ccc;
+  z-index: 3;
+  > span {
+    display: none;
+    padding: 0 1px 2px;
+    font-size: 0.8em;
+    line-height: 1;
+    &:nth-child(1){ .screen-tiny({ display: block; }); }
+    &:nth-child(2){ .screen-xxs({ display: block; }); }
+    &:nth-child(3){ .screen-xs({ display: block; }); }
+    &:nth-child(4){ .screen-sm({ display: block; }); }
+    &:nth-child(5){ .screen-md({ display: block; }); }
+    &:nth-child(6){ .screen-lg({ display: block; }); }
+    &:nth-child(7){ .screen-xl({ display: block; }); }
+  }
 }
 
 pre {
@@ -128,6 +157,13 @@ a, .link {
   font-size: 1em;
   &.badge-light {
     border: 1px solid;
+  }
+  &.badge-dark {
+    background-color: @green;
+  }
+  &.badge-pill {
+    padding-right: .45em;
+    padding-left: .45em;
   }
   > input.badge-input {
     display: inline;
@@ -157,13 +193,15 @@ h1 {
   line-height: 0.7;
   font-size: 3em;
   font-family: 'Share', cursive;
+  transition: all ease-in-out 0.3s;
   z-index: 0;
   > a {
     color: lighten(@brown, 20%);
   }
   > img {
     height: 100%;
-    margin-right: 2%;
+    margin-right: 10px;
+    transition: all ease-in-out 0.3s;
   }
 }
 
@@ -195,14 +233,14 @@ h6 {
 
 .btn {
   border-radius: 0;
-  border: 3px solid @brown;
+  border: 3px solid @red;
   color: #fff;
-  background-color: lighten(@brown, 10%);
+  background-color: lighten(@red, 10%);
   text-transform: uppercase;
   letter-spacing: 1px;
   &:hover, &:focus, &:active, &.active {
     color: #fff;
-    background-color: lighten(@brown, 20%);
+    background-color: lighten(@red, 20%);
     box-shadow: none;
   }
   &.btn-disabled {
@@ -251,17 +289,21 @@ h6 {
     }
   }
   &.cook {
+    grid-template-rows: 50px auto;
     > header {
       > h2 {
-        display: block;
+        .screen-xs-min({
+          display: block;
+          grid-column-start: 2;
+          grid-column-end: 4;
+        });
       }
     }
   }
   > header {
     position: fixed;
     display: grid;
-    grid-row-start: 1;
-    grid-row-end: 2;
+    grid-row: 1/2;
     grid-template-columns: 200px 300px auto 30px;
     grid-template-rows: 100%;
     background-color: #fff;
@@ -272,12 +314,19 @@ h6 {
     border-bottom: 5px solid #eee;
     transition: all ease-in-out 0.3s;
     z-index: 1;
+    .screen-xs-max({
+      grid-template-columns: 150px 30px;
+    });
     &.compact {
       padding: 10px 20px;
       height: 50px;
       h1 {
         font-size: 2.4em;
         line-height: 0.9;
+        > img {
+          height: 85%;
+          margin-right: 8px;
+        }
       }
       .search {
         font-size: 0.8em;
@@ -300,20 +349,21 @@ h6 {
         display: none;
       });
     }
-  }
-  h2 {
-    display: none;
-    line-height: 1;
-    font-weight: 100;
-    font-size: 1.6em;
-    margin-bottom: 0;
-    > svg {
-      margin-right: 10px;
+    h2 {
+      display: none;
+      line-height: 1.1;
+      font-weight: 100;
+      font-size: 1.4em;
+      margin-bottom: 0;
+      > svg {
+        margin-right: 10px;
+      }
     }
   }
   .menu {
     grid-row-start: 1;
     grid-column-start: 4;
+    text-align: right;
     &.landing-panel {
       ul {
         > li {
@@ -374,13 +424,21 @@ h6 {
     padding: 80px 20px 0 0;
     z-index: 1;
   }
-  .content {
-    grid-row-start: 2;
-    grid-column-start: 1;
-    grid-template-columns: 100%;
-    &.home {
-      grid-template-columns: 350px auto;
-      grid-row-start: 1;
+}
+
+.content {
+  grid-row-start: 2;
+  grid-column-start: 1;
+  grid-template-columns: 100%;
+}
+
+.nav-tabs {
+  .nav-item {
+    .nav-link {
+      border-radius: 0;
+      &.active {
+        background: none;
+      }
     }
   }
 }

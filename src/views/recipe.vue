@@ -3,7 +3,7 @@
     <div v-if="currentRecipe">
       <div class="details">
         <router-link :to="{ name: 'browse', params: {}}" class="link">
-          <font-awesome-icon :icon="['fal', 'chevron-left']" /> back
+          <font-awesome-icon :icon="['fal', 'chevron-left']" /> continue browsing
         </router-link>
         <h2>{{currentRecipe.details.name}}</h2>
         <h3>{{currentRecipe.details.description}}</h3>
@@ -55,7 +55,7 @@
         <table class="table table-sm" v-if="currentRecipe.steps.length > 0">
           <tbody>
             <tr v-for="(step, index) in currentRecipe.steps" v-bind:key="index">
-              <td style="width: 50px;">
+              <td style="width: 40px;">
                 <span class="badge badge-light badge-pill">{{index + 1}}</span>
               </td>
               <td>{{step.description}}</td>
@@ -83,6 +83,7 @@ export default {
   },
   methods: {
     cookRecipe: function(){
+      this.$store.commit('setSelectedRecipes', []);
       localStorage.setItem('selectedRecipes', JSON.stringify([this.recipe]));
       this.$router.push({ name: 'cook', params: {}});
     }
@@ -91,12 +92,17 @@ export default {
 </script>
 
 <style scoped lang="less">
+@import '../assets/less/shared.less';
+
 .recipe {
   padding: 30px;
   > div {
     display: grid;
-    grid-template-columns: 2fr 3fr;
     grid-gap: 30px;
+    .screen-xs-max({
+      grid-template-columns: 100%;
+      grid-gap: 20px;
+    });
   }
 }
 .details {
@@ -122,6 +128,10 @@ export default {
   border: 1px solid #ddd;
   grid-column-start: 2;
   grid-column-end: 3;
+  .screen-xs-max({
+    grid-column-start: 1;
+    grid-column-end: 2;
+  });
   > .btn {
     position: absolute;
     right: 20px;
@@ -158,5 +168,9 @@ hr {
 .steps {
   grid-column-start: 2;
   grid-column-end: 3;
+  .screen-xs-max({
+    grid-column-start: 1;
+    grid-column-end: 2;
+  });
 }
 </style>

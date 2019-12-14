@@ -63,9 +63,17 @@ export default {
   display: grid;
   grid-template-rows: 100%;
   position: relative;
+  &.content {
+    grid-template-columns: 350px auto;
+    grid-row-start: 1;
+    .screen-xs-max({
+      grid-template-columns: 100%;
+      grid-template-rows: 450px;
+    });
+  }
   > p {
     grid-row-start: 1;
-    grow-row-end: 2;
+    grid-row-end: 2;
     padding: 20px;
   }
   > .recipe-masonry {
@@ -73,8 +81,17 @@ export default {
     grid-row-end: 2;
     grid-column-start: 2;
     grid-column-end: 3;
+    z-index: 1;
+    .screen-xs-max({
+      grid-row-start: 2;
+      grid-row-end: 2;
+      grid-column-start: 1;
+    });
     > .grid-layout {
       border-left: 5px solid #eee;
+      .screen-xs-max({
+        border-left: none;
+      });
     }
   }
   grid-column-start: 1;
@@ -85,6 +102,10 @@ export default {
     height: 100%;
     width: 40%;
     padding: 0 50px 50px;
+    .screen-xs-max({
+      width: 100%;
+      height: auto;
+    });
     > h1 {
       font-size: 4em;
       margin: 0 0 40px;
@@ -93,7 +114,7 @@ export default {
       color: lighten(@brown, 20%);
       > img {
         height: 50px;
-        margin-right: 20px;
+        margin-right: 15px;
       }
     }
     > ul {

@@ -33,7 +33,6 @@ export default {
 .grid-layout {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  grid-gap: 1px;
   grid-auto-rows: minmax(180px, auto);
   grid-auto-flow: dense;
   overflow-x: hidden;
