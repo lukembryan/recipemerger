@@ -26,7 +26,15 @@
         </button>
       </div>
       <hr />
-      <div class="ingredients">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <h4 class="nav-link link" v-bind:class="{'active': activeDetail == 'ingredients'}" @click="activeDetail = 'ingredients'">Ingredients</h4>
+        </li>
+        <li class="nav-item">
+          <h4 class="nav-link link" v-bind:class="{'active': activeDetail == 'steps'}" @click="activeDetail = 'steps'">Steps</h4>
+        </li>
+      </ul>
+      <div class="ingredients" v-bind:class="{'shown': activeDetail == 'ingredients'}">
         <h4>Ingredients</h4>
         <div class="component" v-for="(ingredients, component) in currentRecipe.ingredients" v-bind:key="component">
           <table class="table table-sm">
@@ -50,7 +58,7 @@
           no ingredients to show
         </div>
       </div>
-      <div class="steps">
+      <div class="steps" v-bind:class="{'shown': activeDetail == 'steps'}">
         <h4>Steps</h4>
         <table class="table table-sm" v-if="currentRecipe.steps.length > 0">
           <tbody>
@@ -76,6 +84,11 @@ import mixins from '@/mixins.js';
 export default {
   name: 'recipe',
   mixins: [mixins],
+  data: function(){
+    return {
+      activeDetail: 'ingredients'
+    }
+  },
   computed: {
     currentRecipe: function(){
       return this.$store.state.currentRecipe;
@@ -96,6 +109,9 @@ export default {
 
 .recipe {
   padding: 30px;
+  .screen-xs-max({
+    padding: 20px;
+  });
   > div {
     display: grid;
     grid-gap: 30px;
@@ -150,6 +166,17 @@ hr {
   line-height: 1.2;
   grid-column-start: 1;
   grid-column-end: 2;
+  .screen-xs-max({
+    display: none;
+  });
+  &.shown {
+    .screen-xs-max({
+      display: block;
+      > h4 {
+        display: none;
+      }
+    });
+  }
   > .component {
     &:nth-child(3){
       margin-top: 15px;
@@ -169,8 +196,25 @@ hr {
   grid-column-start: 2;
   grid-column-end: 3;
   .screen-xs-max({
+    display: none;
     grid-column-start: 1;
     grid-column-end: 2;
   });
+  &.shown {
+    .screen-xs-max({
+      display: block;
+      > h4 {
+        display: none;
+      }
+    });
+  }
+}
+.nav {
+  .screen-sm-min({
+    display: none;
+  });
+  h4 {
+    margin-bottom: 0;
+  }
 }
 </style>

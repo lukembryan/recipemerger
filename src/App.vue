@@ -16,9 +16,6 @@
         <router-link to="/" @click="showMenu = false">sizzle</router-link>
       </h1>
       <search v-if="['browse'].indexOf(page) >= 0" />
-      <h2 v-if="selectedRecipes[0]">
-        <font-awesome-icon :icon="['fal', 'utensils']" /> Estimated serving time 7:10 pm
-      </h2>
       <div class="menu">
         <font-awesome-icon :icon="['fal', 'bars']" v-if="!showMenu && page != 'home'" @click="showMenu = true" class="link" />
         <div v-if="showMenu" id="menu-container">
@@ -290,15 +287,6 @@ h6 {
   }
   &.cook {
     grid-template-rows: 50px auto;
-    > header {
-      > h2 {
-        .screen-xs-min({
-          display: block;
-          grid-column-start: 2;
-          grid-column-end: 4;
-        });
-      }
-    }
   }
   > header {
     position: fixed;
@@ -348,16 +336,6 @@ h6 {
       .screen-xs-max({
         display: none;
       });
-    }
-    h2 {
-      display: none;
-      line-height: 1.1;
-      font-weight: 100;
-      font-size: 1.4em;
-      margin-bottom: 0;
-      > svg {
-        margin-right: 10px;
-      }
     }
   }
   .menu {
