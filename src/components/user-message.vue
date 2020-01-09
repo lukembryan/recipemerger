@@ -2,7 +2,7 @@
   <div class="user-message" v-if="message.text.length > 0">
     <font-awesome-icon :icon="['fal', icon]" v-bind:class="message.type" />
     <div class="message">{{message.text}}</div>
-    <div class="link" v-if="['text-warning', 'text-danger'].indexOf(message.type) >= 0" @click="closeMessage()">OK</div>
+    <button class="btn primary" v-if="['text-warning', 'text-danger'].indexOf(message.type) >= 0" @click="closeMessage()">OK</button>
   </div>
 </template>
 
@@ -63,11 +63,11 @@ export default {
       animation: rotation 2s infinite linear;
     }
   }
-  > div.message {
+  > .message {
     margin-top: 15px;
     color: #fff;
   }
-  > div.link {
+  > button {
     margin-top: 25px;
   }
 }

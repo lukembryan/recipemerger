@@ -197,7 +197,9 @@
                   no steps to show
                 </div>
                 <div class="step" v-for="(step, index) in savedRecipe.steps" v-bind:key="index">
-                  <div class="step-number"><span class="badge badge-dark badge-pill">{{index + 1}}</span></div>
+                  <div class="step-number">
+                    <span class="badge badge-dark badge-pill">{{index + 1}}</span>
+                  </div>
                   <div class="form-field">
                     <label>Duration</label>
                     <input type="number" name="'step-duration-' + index" v-if="edit.steps" v-model="step.duration" min="1" />
@@ -213,8 +215,10 @@
                     <div v-if="!edit.steps && step.parallel"><font-awesome-icon :icon="['fal', 'clock']" /> {{step.setupDuration}} min</div>
                     <input type="number" v-bind:name="'step-setupduration-' + index" v-if="edit.steps && step.parallel" v-model="step.setupDuration" min="1" />
                   </div>
-                  <span class="float-right link" v-if="edit.steps" @click="removeStep(index)">
-                    <font-awesome-icon :icon="['fal', 'trash']" v-if="edit.steps" /> delete
+                  <span class="options float-right" v-if="edit.steps">
+                    <span class="link" v-if="index > 0" @click="moveStep(index, -1)"><font-awesome-icon :icon="['fal', 'arrow-up']" /></span>
+                    <span class="link" v-if="index < savedRecipe.steps.length-1" @click="moveStep(index, 1)"><font-awesome-icon :icon="['fal', 'arrow-down']" /></span> |
+                    <span class="link" v-if="edit.steps" @click="removeStep(index)"><font-awesome-icon :icon="['fal', 'trash']" v-if="edit.steps" /> delete</span>
                   </span>
                   <div class="form-field description">
                     <label>Description</label>
@@ -246,10 +250,10 @@
                       <option value="">select a step</option>
                       <option v-bind:value="stepDependency" v-show="stepDependency < index" v-for="(dependency, stepDependency) in savedRecipe.steps" v-bind:key="stepDependency">{{stepDependency + 1}} - {{dependency.description}}</option>
                     </select>
-                    <div v-if="step.dependsOn">
-                      <span style="margin: 10px 10px 0 0;" class="badge badge-light badge-pill" v-for="(dependency, dependencyIndex) in step.dependsOn" v-bind:key="dependencyIndex">
-                        step {{dependency + 1}}
-                        <span class="link" v-if="edit.steps" @click="removeDependency(index, dependencyIndex)">
+                    <div v-if="step.dependsOn !== null">
+                      <span style="margin: 10px 10px 0 0;" class="badge badge-light badge-pill">
+                        step {{step.dependsOn + 1}}
+                        <span class="link" v-if="edit.steps" @click="removeDependency(index)">
                           <font-awesome-icon :icon="['fal', 'trash']" />
                         </span>
                       </span>
@@ -382,6 +386,12 @@ export default {
       if(!this.edit[component] || noToggle){
         var data = {};
         data[component] = this.savedRecipe[component];
+        if(component == 'steps'){
+          data.steps.forEach(function(step){
+            if(step.duration !== null) step.duration = parseInt(step.duration);
+            if(step.setupDuration !== null) step.setupDuration = parseInt(step.setupDuration);
+          });
+        }
         this.$store.dispatch('saveRecipe', data);
       }
     },
@@ -441,6 +451,10 @@ export default {
     addStep: function(){
       this.savedRecipe.steps.push(this.template('step'));
     },
+    moveStep: function(index, offset){
+      var newIndex = index + offset;
+      this.savedRecipe.steps.splice(newIndex, 0, this.savedRecipe.steps.splice(index, 1)[0]);
+		},
     removeStep: function(index){
       this.savedRecipe.steps.splice(index, 1);
     },
@@ -454,15 +468,14 @@ export default {
       this.selectedIngredient = '';
     },
     addDependency: function(stepIndex){
-      if(!this.savedRecipe.steps[stepIndex].dependsOn) this.savedRecipe.steps[stepIndex].dependsOn = [];
-      this.savedRecipe.steps[stepIndex].dependsOn.push(this.selectedDependency);
+      this.savedRecipe.steps[stepIndex].dependsOn = this.selectedDependency;
       this.selectedDependency = '';
     },
     removeIngredientUsed: function(stepIndex, ingredientIndex){
       this.savedRecipe.steps[stepIndex].ingredientsUsed.splice(ingredientIndex, 1);
     },
-    removeDependency: function(stepIndex, dependencyIndex){
-      this.savedRecipe.steps[stepIndex].dependsOn.splice(dependencyIndex, 1);
+    removeDependency: function(stepIndex){
+      this.savedRecipe.steps[stepIndex].dependsOn = null
     },
     template: function(component){
       var template;
@@ -663,7 +676,7 @@ h5 {
     > .step-number {
       margin-top: 7px;
     }
-    > .link {
+    > .options {
       justify-self: end;
     }
     .form-field {

@@ -1,8 +1,24 @@
 const fb = require('./firebase.js');
 
+import moment from 'moment';
+
 export default {
   data: function () {
-    return {}
+    return {
+      servingTime: '',
+      parallelTime: {},
+      progress: {
+        id: null,
+        currentStep: 0,
+        timer: {
+          step: null,
+          duration: 0,
+          started: null,
+          timeAdded: 0,
+          show: false
+        }
+      }
+    }
   },
   computed: {
     page: function(){
@@ -36,9 +52,103 @@ export default {
       }
       return foundIngredient;
     },
+    calcServingTime: function(currentRecipe, mode, update){
+      var recipeTime = 0;
+      this.parallelTime = {};
+
+      var included = !update;
+
+      for(var i=0; i<currentRecipe.steps.length; i++){
+        var currentStep = currentRecipe.steps[i];
+        var previousStep = currentRecipe.steps[i-1];
+        //var nextStep = currentRecipe.steps[i+1];
+
+        if(update) included = update && this.progress.currentStep <= i;
+        console.log(included, this.progress.currentStep, i)
+
+        // LOGGING
+        /*
+        var stepSummary = (i+1) + ': ';
+        if(currentStep.setupDuration) stepSummary += 'setup:' + currentStep.setupDuration + ' + ';
+        stepSummary += 'duration:' + currentStep.duration;
+        if(currentStep.parallel) stepSummary += ' | parallel';
+        if(currentStep.dependsOn !== null){
+          stepSummary += ' | depends on ';
+          stepSummary += currentStep.dependsOn+1;
+         }
+        console.log(stepSummary);
+        */
+        // LOGGING
+
+        if(currentStep.parallel){
+          // current step has parallel component
+
+          this.parallelTime[i] = parseInt(currentStep.duration); // add parallel time for use
+
+          if(previousStep && previousStep.parallel){
+            // previous step has parallel time
+            if(currentStep.dependsOn !== null) this.parallelTime[currentStep.dependsOn] = 0; // remove parallel time of dependent step
+            if(included) recipeTime += this.useParallelTime(currentStep.setupDuration, i) + currentStep.duration;
+          }else{
+            // previous step doesn't have parallel time
+            if(included) recipeTime += currentStep.setupDuration + currentStep.duration; // add all step durations
+          }
+        }else{
+          // current step doesn't have parallel component
+          if(currentStep.dependsOn !== null) this.parallelTime[currentStep.dependsOn] = 0; // remove parallel time of dependent step
+          if(included) recipeTime += this.useParallelTime(currentStep.duration, i); // use any available parallel time
+        }
+
+        //console.log('recipeTime', recipeTime, 'parallelTime', this.parallelTime);
+      }
+
+      this.servingTime = mode == 'time' ? moment().add(recipeTime, 'minutes').format('h:mm A') : recipeTime;
+    },
+    calcTimeLeft: function(timer){
+      var duration = timer.duration + parseInt(timer.timeAdded);
+      var finishTime = moment(timer.started).add(duration, 'm');
+      var secondsLeft = -moment().diff(finishTime, 'seconds');
+      if(secondsLeft === 0){
+        var audio = new Audio(require('./assets/alarm.mp3'));
+        audio.play();
+      }
+      return secondsLeft;
+    },
+    useParallelTime: function(duration, currentStep){
+      duration = parseInt(duration);
+      var parallelTimeUsed = 0;
+      var parallelTime = this.parallelTime;
+
+      Object.keys(parallelTime).sort().reverse().forEach(function(parallelStep){
+        parallelStep = parseInt(parallelStep);
+
+        if(parallelStep < currentStep && parallelTime[parallelStep] > 0 && parallelTimeUsed === 0){
+          if(parallelTime[parallelStep] >= duration){
+            parallelTimeUsed = duration;
+          }else{
+            parallelTimeUsed = parallelTime[parallelStep];
+          }
+
+          parallelTime[parallelStep] -= parallelTimeUsed;
+        }
+      });
+
+        return duration - parallelTimeUsed; // duration to add to recipe time is what is left after parallel time used
+      },
+    getProgress: function(){
+      var progress = localStorage.getItem('progress');
+      if(progress){
+        this.progress = JSON.parse(progress);
+        this.$store.dispatch('loadSelectedRecipe', this.progress.id);
+      }
+    },
     clone: function(original){
       var copy = JSON.stringify(original);
       return JSON.parse(copy);
     }
+  },
+  created: function(){
+    window.addEventListener('keydown', this.handleKeyPress);
+    this.getProgress();
   }
 };

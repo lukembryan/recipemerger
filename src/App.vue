@@ -10,6 +10,7 @@
       <span>xl</span>
     </div>
     <user-message />
+    <dialog-message />
     <header v-bind:class="{'compact': scrolledDown || page == 'cook'}" v-if="page != 'home'">
       <h1 v-if="page != 'home'">
         <img src="/img/logo.png" />
@@ -40,13 +41,15 @@
 import mixins from './mixins.js';
 import search from '@/components/search.vue';
 import userMessage from '@/components/user-message.vue';
+import dialogMessage from '@/components/dialog-message.vue';
 
 export default {
   name: 'layout',
   mixins: [mixins],
   components: {
     search,
-    userMessage
+    userMessage,
+    dialogMessage
   },
   data: function(){
     return {
@@ -136,7 +139,7 @@ pre {
   font-size: 0.7em;
 }
 
-a, .link {
+a, .link, button.btn.link {
   color: lighten(@brown, 10%);
   cursor: pointer;
   font-weight: 400;
@@ -192,6 +195,9 @@ h1 {
   font-family: 'Share', cursive;
   transition: all ease-in-out 0.3s;
   z-index: 0;
+  .screen-xs-max({
+    width: 170px;
+  });
   > a {
     color: lighten(@brown, 20%);
   }
@@ -230,14 +236,12 @@ h6 {
 
 .btn {
   border-radius: 0;
-  border: 3px solid @red;
-  color: #fff;
-  background-color: lighten(@red, 10%);
+  border-width: 3px;
   text-transform: uppercase;
   letter-spacing: 1px;
+  cursor: pointer;
+  pointer-events: all;
   &:hover, &:focus, &:active, &.active {
-    color: #fff;
-    background-color: lighten(@red, 20%);
     box-shadow: none;
   }
   &.btn-disabled {
@@ -247,7 +251,25 @@ h6 {
     background-color: transparent;
     pointer-events: none;
   }
-  .svg-inline--fa {
+  &.primary {
+    border: 3px solid @red;
+    color: #fff;
+    background-color: lighten(@red, 10%);
+    &:hover, &:focus, &:active, &.active {
+      color: #fff;
+      background-color: lighten(@red, 20%);
+    }
+  }
+  &.secondary {
+    border: 3px solid lighten(@red, 40%);
+    color: @red;
+    background-color: #fff;
+    &:hover, &:focus, &:active, &.active {
+      color: lighten(@red, 10%);
+      background-color: lighten(@red, 55%);
+    }
+  }
+  > svg {
     margin: 0px 10px 0px 0px;
   }
 }
@@ -303,7 +325,7 @@ h6 {
     transition: all ease-in-out 0.3s;
     z-index: 1;
     .screen-xs-max({
-      grid-template-columns: 150px 30px;
+      grid-template-columns: auto 30px;
     });
     &.compact {
       padding: 10px 20px;
@@ -320,12 +342,13 @@ h6 {
         font-size: 0.8em;
       }
       .menu {
-        font-size: 0.8em;
-        line-height: 2.5;
         svg {
-          &.fa-times {
-            top: 10px;
-          }
+          font-size: 1.6em;
+          line-height: 2.5;
+          top: 10px;
+        }
+        #menu-container {
+          padding: 40px 20px 0 0;
         }
       }
     }
@@ -341,12 +364,15 @@ h6 {
   .menu {
     grid-row-start: 1;
     grid-column-start: 4;
+    .screen-xs-max({
+      grid-column-start: 2;
+    });
     text-align: right;
     &.landing-panel {
       ul {
         > li {
+          text-align: left;
           > a {
-            text-align: left;
             color: initial;
             &:hover {
               padding-left: 5px;
@@ -374,7 +400,6 @@ h6 {
       padding: 0;
       list-style: none;
       > li {
-        line-height: 2;
         text-align: right;
         font-size: 2em;
         &.active {
@@ -383,9 +408,11 @@ h6 {
           }
         }
         > a {
-          display: block;
           font-weight: 200;
           color: white;
+          padding: 8px 15px;
+          line-height: 2.5;
+          background-color: #ffffff40;
           transition: all ease-in-out 0.3s;
           &:hover {
             padding-right: 5px;
@@ -399,7 +426,7 @@ h6 {
     right: 0;
     top: 0;
     margin: 0;
-    padding: 80px 20px 0 0;
+    padding: 60px 20px 0 0;
     z-index: 1;
   }
 }

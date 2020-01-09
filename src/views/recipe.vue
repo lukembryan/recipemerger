@@ -11,9 +11,7 @@
           Original
           <a v-bind:href="currentRecipe.details.source.url" target="_blank" v-if="currentRecipe.details.source.url">{{currentRecipe.details.source.name}}</a>
         </p>
-        <p>
-          Serves <strong>{{currentRecipe.details.serves}}</strong>
-        </p>
+        <p>Serves <strong>{{currentRecipe.details.serves}}</strong></p>
         <div>
           <span class="badge badge-dark badge-pill" v-for="(tag, index) in currentRecipe.details.tags" v-bind:key="index">
             {{tag}}
@@ -21,8 +19,12 @@
         </div>
       </div>
       <div class="image" v-bind:style="currentRecipe.details.imageStyle">
-        <button class="btn" @click="cookRecipe()">
-          <font-awesome-icon :icon="['fal', 'hat-chef']" /> cook
+        <div class="time">
+          <font-awesome-icon :icon="['fal', 'stopwatch']" />
+          <span>{{showHoursMinutes(servingTime)}}</span>
+        </div>
+        <button class="btn primary" @click="cookRecipe()">
+          <font-awesome-icon :icon="['fal', 'hat-chef']" /> {{progress.id == recipe ? 'continue' : 'start'}}
         </button>
       </div>
       <hr />
@@ -96,9 +98,38 @@ export default {
   },
   methods: {
     cookRecipe: function(){
-      this.$store.commit('setSelectedRecipes', []);
-      localStorage.setItem('selectedRecipes', JSON.stringify([this.recipe]));
+      var progress = localStorage.getItem('progress');
+      if(progress) progress = JSON.parse(progress);
+
+      if(!progress || progress.id != this.recipe){
+        this.$store.commit('setSelectedRecipe', null);
+        localStorage.setItem('progress', JSON.stringify({
+          id: this.recipe,
+          currentStep: 0,
+          timer: {
+            step: null,
+            duration: 0,
+            started: null,
+            timeAdded: 0,
+            show: false
+          }
+        }));
+      }
+
       this.$router.push({ name: 'cook', params: {}});
+    },
+    showHoursMinutes: function(totalMinutes) {
+      var hours = Math.floor(totalMinutes / 60);
+      var minutes = totalMinutes % 60;
+      var time = '';
+      time += hours > 0 ? hours + (hours === 1 ? ' hour' : ' hours') : '';
+      time += minutes > 0 ? ' ' + minutes + (minutes === 1 ? ' minute' : ' minutes') : '';
+      return time;
+    }
+  },
+  watch: {
+    currentRecipe: function(currentRecipe){
+      if(currentRecipe) this.calcServingTime(currentRecipe);
     }
   }
 }
@@ -148,6 +179,18 @@ export default {
     grid-column-start: 1;
     grid-column-end: 2;
   });
+  > .time {
+    display: inline-block;
+    padding: 6px 8px;
+    color: #fff;
+    margin: 20px 0 0 20px;
+    background-color: #00000070;
+    text-transform: none;
+    line-height: 1.2;
+    > svg {
+      margin: 0 5px 0 0;
+    }
+  }
   > .btn {
     position: absolute;
     right: 20px;
@@ -161,6 +204,9 @@ hr {
   border-color: #ccc;
   grid-column-start: 1;
   grid-column-end: 3;
+  .screen-xs-max({
+    display: none;
+  });
 }
 .ingredients {
   line-height: 1.2;

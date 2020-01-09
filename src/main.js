@@ -7,23 +7,23 @@ import './registerServiceWorker';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {
-  faSearch, faBars, faTimes, faEdit, faPlus,
+  faSearch, faBars, faTimes, faEdit, faMinus, faPlus,
   faToggleOn, faToggleOff, faCheck, faClock,
   faTrash, faSignOut, faSignIn, faExclamation,
   faSyncAlt, faChevronLeft, faChevronUp,
-  faChevronDown, faHatChef, faKeyboard, faArrowUp,
-  faArrowDown, faArrowLeft, faArrowRight, faUtensils,
-  faWatch, faStopwatch
+  faChevronDown, faChevronRight, faHatChef,
+  faKeyboard, faArrowUp, faArrowDown, faArrowLeft,
+  faArrowRight, faUtensils, faWatch, faStopwatch
 } from '@fortawesome/pro-light-svg-icons';
 
 library.add(
-  faSearch, faBars, faTimes, faEdit, faPlus,
+  faSearch, faBars, faTimes, faEdit, faMinus, faPlus,
   faToggleOn, faToggleOff, faCheck, faClock,
   faTrash, faSignOut, faSignIn, faExclamation,
   faSyncAlt, faChevronLeft, faChevronUp,
-  faChevronDown, faHatChef, faKeyboard, faArrowUp,
-  faArrowDown, faArrowLeft, faArrowRight, faUtensils,
-  faWatch, faStopwatch
+  faChevronDown, faChevronRight, faHatChef,
+  faKeyboard, faArrowUp, faArrowDown, faArrowLeft,
+  faArrowRight, faUtensils, faWatch, faStopwatch
 );
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);

@@ -11,13 +11,17 @@ export default new Vuex.Store({
     user: null,
     recipe: '',
     currentRecipe: null,
-    selectedRecipes: [],
+    selectedRecipe: null,
     recipes: null,
     page: '',
     scrolledDown: false,
     userMessage: {
       text: '',
       type: ''
+    },
+    dialogMessage: {
+      text: '',
+      proceed: null
     }
   },
   mutations: {
@@ -46,8 +50,11 @@ export default new Vuex.Store({
     setUserMessage: function(state, userMessage){
       state.userMessage = userMessage;
     },
-    setSelectedRecipes: function(state, selectedRecipes){
-      state.selectedRecipes = selectedRecipes;
+    setDialogMessage: function(state, dialogMessage){
+      state.dialogMessage = dialogMessage;
+    },
+    setSelectedRecipe: function(state, selectedRecipe){
+      state.selectedRecipe = selectedRecipe;
     }
   },
   actions: {
@@ -117,19 +124,17 @@ export default new Vuex.Store({
         commit('setUserMessage', { text: 'issue deleting recipe', type: 'text-danger' });
       });
     },
-    loadSelectedRecipes: function({state, commit}, selectedRecipeIds){
-      var selectedRecipes = [];
+    loadSelectedRecipe: function({state, commit}, selectedRecipeId){
+      var selectedRecipe = null;
 
       var recipesCheck = setInterval(function(){
         if(state.recipes){
           clearInterval(recipesCheck);
 
-          for(var i=0; i < selectedRecipeIds.length; i++){
-            var recipeInList = state.recipes[selectedRecipeIds[i]];
-            if(recipeInList) selectedRecipes.push(recipeInList);
-          }
+          var recipeInList = state.recipes[selectedRecipeId];
+          if(recipeInList) selectedRecipe = recipeInList;
 
-          commit('setSelectedRecipes', selectedRecipes);
+          commit('setSelectedRecipe', selectedRecipe);
         }
       }, 100);
     }
