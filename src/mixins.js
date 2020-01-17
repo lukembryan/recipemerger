@@ -111,6 +111,7 @@ export default {
       if(secondsLeft === 0){
         var audio = new Audio(require('./assets/alarm.mp3'));
         audio.play();
+        timer.show = true;
       }
       return secondsLeft;
     },

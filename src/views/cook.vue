@@ -43,14 +43,16 @@
         </div>
       </form>
     </div>
-    <div class="current-step" v-if="progress.timer.step === null || (progress.timer.step !== null && !progress.timer.show)">
+    <div class="current-step"
+        v-if="progress.timer.step === null || (progress.timer.step !== null && !progress.timer.show)"
+         v-hammer:swipe="onSwipe">
       <div class="step-control prev">
         <button class="btn secondary" @click="changeStep(-1);" v-if="progress.currentStep > 0">
           <font-awesome-icon :icon="['fal', 'arrow-left']" />
         </button>
       </div>
       <div class="step-control next">
-        <button class="btn primary" @click="changeStep(1);" v-if="progress.currentStep < selectedRecipe.steps.length - 1">
+        <button class="btn primary" @click="changeStep(1);" v-if="progress.currentStep < selectedRecipe.steps.length - 1 || selectedRecipe.steps[progress.currentStep].parallel">
           <font-awesome-icon :icon="['fal', 'arrow-right']" v-if="!selectedRecipe.steps[progress.currentStep].parallel" />
           <font-awesome-icon :icon="['fal', 'stopwatch']" v-if="selectedRecipe.steps[progress.currentStep].parallel" />
         </button>
@@ -68,7 +70,11 @@
       </div>
       <timer :timer="progress.timer" mode="button" v-if="progress.timer.step !== null && !progress.timer.show" />
     </div>
-    <div class="ingredients-used" v-bind:class="{'shown': showIngredients}" @click="toggleIngredients($event)" v-if="progress.timer.step === null || (progress.timer.step !== null && !progress.timer.show)">
+    <div class="ingredients-used"
+          v-bind:class="{'shown': showIngredients}"
+          @click="toggleIngredients($event)"
+          v-if="progress.timer.step === null || (progress.timer.step !== null && !progress.timer.show)"
+          v-hammer:swipe.down="onSwipe">
       <button class="btn link" @click="toggleIngredients($event)" v-if="selectedRecipe.steps[progress.currentStep].ingredientsUsed.length > 0">
         ingredients
         <span class="badge key-guide">
@@ -77,7 +83,7 @@
       </button>
       <div class="ingredients-panel" v-if="selectedRecipe.steps[progress.currentStep].ingredientsUsed.length > 0">
         <div class="ingredients" v-show="showIngredients">
-          <h5>For this step</h5>
+          <h5>Used in this step:</h5>
           <div class="ingredient" v-for="(ingredient, index) in selectedRecipe.steps[progress.currentStep].ingredientsUsed" v-bind:key="index">
             <div>{{ingredient.quantity}} {{findIngredient(ingredient, selectedRecipe).unit}}</div>
             <div>{{findIngredient(ingredient, selectedRecipe).description}}</div>
@@ -135,9 +141,11 @@ export default {
   },
   methods: {
     changeStep: function(direction){
+      if(this.selectedRecipe.steps[this.progress.currentStep].parallel && direction === 1) this.setTimer();
+
       if(this.progress.currentStep == 0 && direction == -1) return;
       if(this.progress.currentStep == this.selectedRecipe.steps.length-1 && direction == 1) return;
-      if(this.selectedRecipe.steps[this.progress.currentStep].parallel && direction === 1) this.setTimer();
+
       this.progress.currentStep += direction;
       this.showIngredients = false;
 
@@ -177,6 +185,12 @@ export default {
       if(e.key == 'ArrowLeft') this.changeStep(-1);
       if(e.key == 'ArrowRight') this.changeStep(1);
       if(e.key == 'i') this.toggleIngredients();
+    },
+    onSwipe: function(e){
+      if(e.direction === 4) this.changeStep(-1);
+      if(e.direction === 2) this.changeStep(1);
+      if(e.direction === 8) this.toggleIngredients();
+      if(e.direction === 16) this.toggleIngredients();
     }
   },
   created: function(){
@@ -185,7 +199,7 @@ export default {
   },
   watch: {
     selectedRecipe: function(selectedRecipe){
-      if(selectedRecipe) this.calcServingTime(selectedRecipe, 'time');
+      if(selectedRecipe) this.calcServingTime(selectedRecipe, 'time', true);
     },
     progress: {
       handler: function (progress) {

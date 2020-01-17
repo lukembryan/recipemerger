@@ -26,6 +26,9 @@ library.add(
   faArrowRight, faUtensils, faWatch, faStopwatch
 );
 
+import { VueHammer } from 'vue2-hammer';
+Vue.use(VueHammer);
+
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
 Vue.config.productionTip = false;
