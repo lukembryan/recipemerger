@@ -58,13 +58,13 @@ export default {
 
       var included = !update;
 
+      if(!currentRecipe) return;
       for(var i=0; i<currentRecipe.steps.length; i++){
         var currentStep = currentRecipe.steps[i];
         var previousStep = currentRecipe.steps[i-1];
         //var nextStep = currentRecipe.steps[i+1];
 
         if(update) included = update && this.progress.currentStep <= i;
-        console.log(included, this.progress.currentStep, i)
 
         // LOGGING
         /*

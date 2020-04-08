@@ -1,7 +1,7 @@
 <template>
   <div class="recipe-masonry">
     <div class="grid-layout">
-      <div class="grid-item" v-bind:class="{'span-2': recipe.details.tags.indexOf('2x') >= 0, 'span-3': recipe.details.tags.indexOf('3x') >= 0}" v-for="(recipe, id) in recipes" v-bind:key="id" :style="recipe.details.imageStyle" @click="showRecipe(id)">
+      <div class="grid-item" ref="recipes" v-bind:class="{'span-2': recipe.details.tags.indexOf('2x') >= 0, 'span-3': recipe.details.tags.indexOf('3x') >= 0}" v-for="(recipe, id) in recipes" v-bind:key="id" :style="recipe.details.imageStyle" @click="showRecipe(id)">
         <span class="name">{{recipe.details.name}}</span>
       </div>
     </div>
@@ -9,6 +9,8 @@
 </template>
 
 <script>
+import Velocity from 'velocity-animate';
+
 export default {
   name: 'recipe-masonry',
   computed: {
@@ -21,8 +23,23 @@ export default {
   },
   methods: {
     showRecipe: function(id){
-      if(id !== this.recipe) this.$router.push({ name: 'recipe', params: { recipe: id }});
+      var that = this;
+      var recipes = this.$refs['recipes'];
+      Velocity(recipes, { opacity: 0 }, { delay: 0, easing: 'easeInQuad' }, 150);
+      setTimeout(function(){
+        if(id !== that.recipe) that.$router.push({ name: 'recipe', params: { recipe: id }});
+      }, 150);
     }
+  },
+  mounted: function(){
+    var that = this;
+    var checkForRecipes = setInterval(function(){
+      var recipes = that.$refs['recipes'];
+      if(recipes){
+        Velocity(recipes, { opacity: 1 }, { delay: 0, easing: 'easeInQuad' }, 150);
+        clearInterval(checkForRecipes);
+      }
+    }, 100);
   }
 }
 </script>
@@ -46,6 +63,7 @@ export default {
     background-position: center center;
     background-size: cover;
     cursor: pointer;
+    opacity: 0;
     &:nth-child(odd) {
       background-color: #424242;
     }

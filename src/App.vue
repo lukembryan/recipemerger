@@ -14,13 +14,13 @@
     <header v-bind:class="{'compact': scrolledDown || page == 'cook'}" v-if="page != 'home'">
       <h1 v-if="page != 'home'">
         <img src="/img/logo.png" />
-        <router-link to="/" @click="showMenu = false">sizzle</router-link>
+        <router-link to="/" @click="toggleMenu()">sizzle</router-link>
       </h1>
       <search v-if="['browse'].indexOf(page) >= 0" />
+      <font-awesome-icon :icon="['fal', 'bars']" v-if="page != 'home'" @click="toggleMenu()" ref="toggle" class="link" />
       <div class="menu">
-        <font-awesome-icon :icon="['fal', 'bars']" v-if="!showMenu && page != 'home'" @click="showMenu = true" class="link" />
-        <div v-if="showMenu" id="menu-container">
-          <font-awesome-icon :icon="['fal', 'times']" @click="showMenu = false" class="link" />
+        <div id="menu-container" ref="menu">
+          <font-awesome-icon :icon="['fal', 'times']" @click="toggleMenu()" class="link" />
           <ul>
             <li v-for="link in menu" v-bind:class="{'active': link.path == '/' + page}" v-bind:key="link.path">
               <router-link :to="link.path">{{link.label}}</router-link>
@@ -31,7 +31,7 @@
           </ul>
         </div>
       </div>
-      <div v-if="showMenu" class="overlay" @click="showMenu = false"></div>
+      <div class="overlay" ref="overlay" @click="toggleMenu()"></div>
     </header>
     <router-view />
   </div>
@@ -42,6 +42,8 @@ import mixins from './mixins.js';
 import search from '@/components/search.vue';
 import userMessage from '@/components/user-message.vue';
 import dialogMessage from '@/components/dialog-message.vue';
+
+import Velocity from 'velocity-animate';
 
 export default {
   name: 'layout',
@@ -69,11 +71,30 @@ export default {
     isAdmin: function(){
       return this.$store.state.user && !this.$store.state.user.isAnonymous;
     },
-    selectedRecipes: function(){
-      return this.$store.state.selectedRecipes;
+    selectedRecipe: function(){
+      return this.$store.state.selectedRecipe;
     }
   },
   methods: {
+    toggleMenu: function(e, state){
+      var menu = this.$refs['menu'];
+      var overlay = this.$refs['overlay'];
+      var toggle = this.$refs['toggle'];
+      if(e) e.stopPropagation();
+      this.showMenu = state ? state : !this.showMenu;
+      if(menu){
+        if(this.showMenu) Velocity(menu, { right: 0, opacity: 1 }, { delay: 300, easing: 'easeInQuad' }, 300);
+        else Velocity(menu, { right: '-100%', opacity: 0 }, { delay: 300, easing: 'easeInQuad' }, 300);
+      }
+      if(overlay){
+        if(this.showMenu) Velocity(overlay, { opacity: 1, pointerEevents: 'all' }, { delay: 0, easing: 'easeInQuad' }, 300);
+        else Velocity(overlay, { opacity: 0, pointerEevents: 'none' }, { delay: 300, easing: 'easeInQuad' }, 300);
+      }
+      if(toggle){
+        if(this.showMenu) Velocity(toggle, { opacity: 0}, { delay: 0, easing: 'easeInQuad' }, 300);
+        else Velocity(toggle, { opacity: 1 }, { delay: 0, easing: 'easeInQuad' }, 300);
+      }
+    },
     updateScroll: function(e){
       this.$store.dispatch('updateScroll', e);
     },
@@ -83,7 +104,7 @@ export default {
   },
   watch: {
     $route(to, from){
-      this.showMenu = false;
+      if(this.showMenu) this.toggleMenu(null, false);
       this.$store.dispatch('recipeLoaded', to.params.recipe);
       this.$store.dispatch('routeChanged', [from.name, to.name]);
     }
@@ -108,6 +129,7 @@ body {
   color: @purple;
   font-size: 16px;
   font-family: 'Titillium Web', sans-serif;
+  overflow-x: hidden;
 }
 
 .responsive-test {
@@ -137,6 +159,10 @@ pre {
   white-space: pre-wrap;
   line-height: 1;
   font-size: 0.7em;
+}
+
+:focus {
+  outline: none;
 }
 
 a, .link, button.btn.link {
@@ -183,6 +209,8 @@ a, .link, button.btn.link {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  pointer-events: none;
   z-index: 0;
 }
 
@@ -252,21 +280,21 @@ h6 {
     pointer-events: none;
   }
   &.primary {
-    border: 3px solid @red;
+    border: 3px solid @brown;
     color: #fff;
-    background-color: lighten(@red, 10%);
+    background-color: lighten(@brown, 10%);
     &:hover, &:focus, &:active, &.active {
       color: #fff;
-      background-color: lighten(@red, 20%);
+      background-color: lighten(@brown, 20%);
     }
   }
   &.secondary {
-    border: 3px solid lighten(@red, 40%);
-    color: @red;
+    border: 3px solid lighten(@brown, 40%);
+    color: @brown;
     background-color: #fff;
     &:hover, &:focus, &:active, &.active {
-      color: lighten(@red, 10%);
-      background-color: lighten(@red, 55%);
+      color: lighten(@brown, 10%);
+      background-color: lighten(@brown, 55%);
     }
   }
   > svg {
@@ -319,11 +347,14 @@ h6 {
     background-color: #fff;
     padding: 20px;
     top: 0;
+    left: 0;
+    right: 0;
     width: 100%;
     height: 70px;
-    border-bottom: 5px solid #eee;
+    border-bottom: 1px solid lighten(@brown, 30%);
     transition: all ease-in-out 0.3s;
-    z-index: 1;
+    box-shadow: #333 0px -10px 15px;
+    z-index: 2;
     .screen-xs-max({
       grid-template-columns: auto 30px;
     });
@@ -361,21 +392,38 @@ h6 {
       });
     }
   }
+  svg {
+    transition: all ease-in-out 0.3s;
+    &.fa-bars {
+      font-size: 2em;
+      font-size: 1.7em;
+      line-height: 1.2;
+      opacity: 1;
+      justify-self: end;
+      grid-column-start: 4;
+      grid-row-start: 1;
+    }
+  }
   .menu {
     grid-row-start: 1;
     grid-column-start: 4;
+    text-align: right;
     .screen-xs-max({
       grid-column-start: 2;
     });
-    text-align: right;
     &.landing-panel {
       ul {
+        left: 0;
+        right: auto;
         > li {
           text-align: left;
           > a {
             color: initial;
+            background-color: lighten(@brown, 45%);
+            padding-left: 55px;
             &:hover {
-              padding-left: 5px;
+              padding-left: 50px;
+              padding-right: auto;
             }
           }
         }
@@ -390,12 +438,10 @@ h6 {
         top: 20px;
         right: 20px;
       }
-      &.fa-bars {
-        font-size: 1.7em;
-        line-height: 1.2;
-      }
     }
     ul {
+      position: absolute;
+      right: 0;
       margin: 0;
       padding: 0;
       list-style: none;
@@ -410,12 +456,12 @@ h6 {
         > a {
           font-weight: 200;
           color: white;
-          padding: 8px 15px;
+          padding: 8px 20px;
           line-height: 2.5;
           background-color: #ffffff40;
           transition: all ease-in-out 0.3s;
           &:hover {
-            padding-right: 5px;
+            padding-right: 15px;
           }
         }
       }
@@ -423,10 +469,13 @@ h6 {
   }
   #menu-container {
     position: fixed;
-    right: 0;
+    right: -100%;
     top: 0;
     margin: 0;
+    bottom: 0;
+    width: 100%;
     padding: 60px 20px 0 0;
+    opacity: 0;
     z-index: 1;
   }
 }

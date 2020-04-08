@@ -1,6 +1,6 @@
 <template>
   <div class="timer" v-bind:class="{'text': mode == 'text'}">
-    <button class="btn secondary" @click="timer.show = true" v-if="mode == 'button'">
+    <button class="btn secondary" @click="timer.show = true;" v-if="mode == 'button'">
       <span class="step">Step </span>
       <span>{{timer.step + 1}}</span>
       <font-awesome-icon :icon="['fal', 'stopwatch']" />
@@ -47,9 +47,12 @@ export default {
         var minutes = Math.floor(totalMinutes % 60);
         var seconds = Math.floor((totalSeconds - (minutes * 60)) % (60 * 60));
         var time = '';
-        if(hours > 0) time += (hours < 10 ? '0' : '') + hours + ':';
-        time += (minutes < 10 && hours > 0 ? '0' : '') + minutes + ':';
-        time += (seconds < 10 ? '0' : '') + seconds;
+
+        if(!isNaN(seconds)){          
+          if(hours > 0) time += (hours < 10 ? '0' : '') + hours + ':';
+          time += (minutes < 10 && hours > 0 ? '0' : '') + minutes + ':';
+          time += (seconds < 10 ? '0' : '') + seconds;
+        }
         return time;
       }
     }
@@ -74,18 +77,21 @@ export default {
       margin-top: 0;
     });
   }
+  &.shown {
+    > button {
+      opacity: 1;
+    }
+  }
   > button {
+    opacity: 0;
     text-transform: uppercase;
     cursor: pointer;
+    transition: all ease-in-out 0.3s;
     .screen-sm-min({
-      margin-top: 40px;
+      margin: 0 20px;
+      width: 260px;
       font-size: 1.2em;
     });
-    > .step {
-      .screen-xs-max({
-        display: none;
-      });
-    }
     > svg {
       margin-left: 15px;
     }

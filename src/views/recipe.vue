@@ -1,10 +1,10 @@
 <template>
-  <div class="recipe content">
+  <div class="recipe content" ref="recipe">
     <div v-if="currentRecipe">
       <div class="details">
-        <router-link :to="{ name: 'browse', params: {}}" class="link">
+        <span class="link" @click="backToRecipes()">
           <font-awesome-icon :icon="['fal', 'chevron-left']" /> continue browsing
-        </router-link>
+        </span>
         <h2>{{currentRecipe.details.name}}</h2>
         <h3>{{currentRecipe.details.description}}</h3>
         <p v-if="currentRecipe.details.source.name">
@@ -82,6 +82,7 @@
 
 <script>
 import mixins from '@/mixins.js';
+import Velocity from 'velocity-animate';
 
 export default {
   name: 'recipe',
@@ -116,7 +117,12 @@ export default {
         }));
       }
 
-      this.$router.push({ name: 'cook', params: {}});
+      var that = this;
+      var recipe = this.$refs['recipe'];
+      Velocity(recipe, { opacity: 0 }, { delay: 0, easing: 'easeInQuad' }, 150);
+      setTimeout(function(){
+        that.$router.push({ name: 'cook', params: {}});
+      }, 150);
     },
     showHoursMinutes: function(totalMinutes) {
       var hours = Math.floor(totalMinutes / 60);
@@ -125,12 +131,30 @@ export default {
       time += hours > 0 ? hours + (hours === 1 ? ' hour' : ' hours') : '';
       time += minutes > 0 ? ' ' + minutes + (minutes === 1 ? ' minute' : ' minutes') : '';
       return time;
+    },
+    backToRecipes: function(){
+      var that = this;
+      var recipe = this.$refs['recipe'];
+      Velocity(recipe, { opacity: 0 }, { delay: 0, easing: 'easeInQuad' }, 150);
+      setTimeout(function(){
+        that.$router.push({ name: 'browse', params: {}});
+      }, 150);
     }
   },
   watch: {
     currentRecipe: function(currentRecipe){
       if(currentRecipe) this.calcServingTime(currentRecipe);
     }
+  },
+  mounted: function(){
+    var that = this;
+    var checkForRecipe = setInterval(function(){
+      var recipe = that.$refs['recipe'];
+      if(recipe){
+        Velocity(recipe, { opacity: 1 }, { delay: 0, easing: 'easeInQuad' }, 150);
+        clearInterval(checkForRecipe);
+      }
+    }, 100);
   }
 }
 </script>
@@ -140,10 +164,17 @@ export default {
 
 .recipe {
   padding: 30px;
+  opacity: 0;
   .screen-xs-max({
     padding: 20px;
   });
+  .screen-lg-min({
+    width: 900px;
+    margin: 0 auto;
+  });
   > div {
+    width: 100%;
+    max-width: 900px;
     display: grid;
     grid-gap: 30px;
     .screen-xs-max({
@@ -175,6 +206,7 @@ export default {
   border: 1px solid #ddd;
   grid-column-start: 2;
   grid-column-end: 3;
+  max-width: 600px;
   .screen-xs-max({
     grid-column-start: 1;
     grid-column-end: 2;

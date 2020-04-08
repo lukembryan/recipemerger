@@ -86,6 +86,7 @@ export default {
       grid-row-start: 2;
       grid-row-end: 2;
       grid-column-start: 1;
+      margin-top: 60px;
     });
     > .grid-layout {
       border-left: 5px solid #eee;
