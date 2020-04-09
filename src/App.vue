@@ -208,7 +208,7 @@ a, .link, button.btn.link {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.9);
   opacity: 0;
   pointer-events: none;
   z-index: 0;
@@ -441,6 +441,7 @@ h6 {
     }
     ul {
       position: absolute;
+      top: 100px;
       right: 0;
       margin: 0;
       padding: 0;
