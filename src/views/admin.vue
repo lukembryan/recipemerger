@@ -138,6 +138,15 @@
                 <div class="empty" v-if="savedRecipe.ingredients.length === 0">
                   no ingredients to show
                 </div>
+                <div v-if="edit.ingredients" style="width: 85px;" class="form-field prep-duration">
+                  <label>Prep Duration</label>
+                  <input type="number" name="prep-duration" min="0" v-model="savedRecipe.prepDuration" />
+                </div>
+                <div v-if="!edit.ingredients">
+                  <span style="margin-right: 10px;" class="badge badge-light badge-pill">{{savedRecipe.prepDuration}} minutes</span>
+                  <label>Prep Duration</label>
+                </div>
+                <hr />
                 <div v-for="(ingredients, component) in savedRecipe.ingredients" v-bind:key="component">
                   <div class="ingredient-component" v-if="edit.ingredients && savedRecipe.ingredients.length > 0">
                     <div v-if="edit.ingredients" class="form-field component-name">
@@ -153,6 +162,7 @@
                     <div class="ingredient" v-for="(ingredient, index) in ingredients.list" v-bind:key="index">
                       <span class="badge badge-light badge-pill" v-if="ingredient.quantity || ingredient.unit">{{ingredient.quantity}} {{ingredient.unit}}</span>
                       <span>{{ingredient.description}}</span>
+                      <span v-if="ingredient.preparation"> <strong class="float-right">{{ingredient.preparation}}</strong></span>
                     </div>
                   </div>
                   <div v-if="edit.ingredients" class="ingredient-list">
@@ -168,6 +178,10 @@
                       <div class="form-field description">
                         <label v-if="index === 0">Description</label>
                         <input type="text" v-bind:name="'ingredient-description-' + component + '-' + index" v-model="ingredient.description" />
+                      </div>
+                      <div class="form-field preparation">
+                        <label v-if="index === 0">Prep</label>
+                        <input type="text" v-bind:name="'ingredient-preparation-' + component + '-' + index" v-model="ingredient.preparation" />
                       </div>
                     </div>
                   </div>
@@ -188,6 +202,11 @@
                     <font-awesome-icon :icon="['fal', { true: 'check', false: 'edit'}[edit.steps]]" /> {{edit.steps ? 'save' : 'edit'}}
                   </span>
                 </h5>
+                <div>
+                  <span style="margin-right: 10px;" class="badge badge-light badge-pill">{{showHoursMinutes(servingTime)}}</span>
+                  <label>Method Duration</label>
+                </div>
+                <hr />
                 <div style="margin-bottom: 15px;" v-if="edit.steps">
                   <span @click="addStep()" class="link">
                     <font-awesome-icon :icon="['fal', 'plus']" /> add step
@@ -392,6 +411,8 @@ export default {
             if(step.setupDuration !== null) step.setupDuration = parseInt(step.setupDuration);
           });
         }
+        if(component == 'ingredients') data.prepDuration = this.savedRecipe.prepDuration;
+        this.calcServingTime(this.savedRecipe);
         this.$store.dispatch('saveRecipe', data);
       }
     },
@@ -519,6 +540,7 @@ export default {
               },
               enabled: true
             },
+            prepDuration: 0,
             ingredients: [],
             steps: []
           };
@@ -545,6 +567,9 @@ export default {
     $route(to){
       if(to.params.recipe == 'add') this.addRecipe();
       else this.editRecipe(to.params.recipe);
+    },
+    savedRecipe: function(savedRecipe){
+      if(savedRecipe) this.calcServingTime(savedRecipe);
     }
   }
 }
@@ -554,9 +579,19 @@ export default {
 .admin {
   position: relative;
   padding: 20px;
+  width: 100%;
+  max-width: 900px;
+  margin: 5% auto;
   h4 {
     display: inline-block;
   }
+}
+
+h3 {
+  display: inline-block;
+  padding-bottom: 5px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid;
 }
 
 h5 {
@@ -646,7 +681,7 @@ h5 {
   &:not(.edit) {
     display: grid;
     grid-gap: 0 15px;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 1fr;
     grid-auto-columns: minmax(100px, auto);
     grid-auto-rows: minmax(10px, auto);
     > div {
@@ -678,6 +713,8 @@ h5 {
     }
     > .options {
       justify-self: end;
+      grid-column: 4/6;
+      grid-row-start: 1;
     }
     .form-field {
       margin-bottom: 10px;
@@ -753,7 +790,7 @@ h5 {
   }
   > div {
     display: grid;
-    grid-template-columns: 60px 100px auto;
+    grid-template-columns: 60px 100px auto 80px;
     grid-auto-rows: minmax(10px, auto);
     .quantity {
       grid-column-start: 1;
@@ -766,6 +803,10 @@ h5 {
     .description {
       grid-column-start: 3;
       grid-column-end: 4;
+    }
+    .preparation {
+      grid-column-start: 4;
+      grid-column-end: 5;
     }
   }
 }

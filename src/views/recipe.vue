@@ -2,6 +2,9 @@
   <div class="recipe content" ref="recipe">
     <div v-if="currentRecipe">
       <div class="details">
+        <router-link v-if="isAdmin" class="float-right" :to="{ name: 'admin', params: { recipe: recipe }}">
+          <font-awesome-icon :icon="['fal', 'edit']" class="link" /> edit
+        </router-link>
         <span class="link" @click="backToRecipes()">
           <font-awesome-icon :icon="['fal', 'chevron-left']" /> continue browsing
         </span>
@@ -95,6 +98,9 @@ export default {
   computed: {
     currentRecipe: function(){
       return this.$store.state.currentRecipe;
+    },
+    isAdmin: function(){
+      return this.$store.state.user && !this.$store.state.user.isAnonymous;
     }
   },
   methods: {
@@ -123,14 +129,6 @@ export default {
       setTimeout(function(){
         that.$router.push({ name: 'cook', params: {}});
       }, 150);
-    },
-    showHoursMinutes: function(totalMinutes) {
-      var hours = Math.floor(totalMinutes / 60);
-      var minutes = totalMinutes % 60;
-      var time = '';
-      time += hours > 0 ? hours + (hours === 1 ? ' hour' : ' hours') : '';
-      time += minutes > 0 ? ' ' + minutes + (minutes === 1 ? ' minute' : ' minutes') : '';
-      return time;
     },
     backToRecipes: function(){
       var that = this;
@@ -177,6 +175,7 @@ export default {
     max-width: 900px;
     display: grid;
     grid-gap: 30px;
+    margin: auto;
     .screen-xs-max({
       grid-template-columns: 100%;
       grid-gap: 20px;

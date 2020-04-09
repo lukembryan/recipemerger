@@ -115,6 +115,14 @@ export default {
       }
       return secondsLeft;
     },
+    showHoursMinutes: function(totalMinutes) {
+      var hours = Math.floor(totalMinutes / 60);
+      var minutes = totalMinutes % 60;
+      var time = '';
+      time += hours > 0 ? hours + (hours === 1 ? ' hour' : ' hours') : '';
+      time += minutes > 0 ? ' ' + minutes + (minutes === 1 ? ' minute' : ' minutes') : '';
+      return time;
+    },
     useParallelTime: function(duration, currentStep){
       duration = parseInt(duration);
       var parallelTimeUsed = 0;

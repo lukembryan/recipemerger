@@ -96,7 +96,10 @@
           <h5>Used in this step:</h5>
           <div class="ingredient" v-for="(ingredient, index) in selectedRecipe.steps[progress.currentStep].ingredientsUsed" v-bind:key="index">
             <div class="quantity">{{ingredient.quantity}} {{findIngredient(ingredient, selectedRecipe).unit}}</div>
-            <div class="description">{{findIngredient(ingredient, selectedRecipe).description}}</div>
+            <div class="description">
+              <div>{{findIngredient(ingredient, selectedRecipe).description}}</div>
+              <span style="margin-top: 10px;" class="badge badge-light badge-pill" v-if="findIngredient(ingredient, selectedRecipe).preparation">{{findIngredient(ingredient, selectedRecipe).preparation}}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -261,7 +264,6 @@ export default {
   beforeDestroy: function(){
     window.removeEventListener('keydown', this.handleKeyPress);
   },
-  beforeMount () {},
   mounted: function(){
     var that = this;
     var checkForRecipe = setInterval(function(){
@@ -512,7 +514,7 @@ export default {
       .screen-xs({ font-size: 13px; });
       .screen-sm({ font-size: 14px; });
       .screen-md({ font-size: 16px; });
-      .screen-lg-min({ font-size: 18px; });
+      .screen-lg-min({ font-size: 19px; });
       > div {
         position: absolute;
         width: 100%;
@@ -522,7 +524,7 @@ export default {
         .screen-xs({ padding: 0 40px; });
         .screen-sm({ padding: 0 50px; });
         .screen-md({ padding: 0 100px; });
-        .screen-lg-min({ padding: 0 10%; });
+        .screen-lg-min({ padding: 0 15%; });
       }
     }
     .timer {
@@ -634,6 +636,7 @@ export default {
             &.description {
               padding: 10px;
               font-size: 1em;
+              line-height: 1.2;
             }
           }
         }
