@@ -33,6 +33,7 @@
       </div>
       <div class="overlay" ref="overlay"></div>
     </header>
+    <search v-if="['browse'].indexOf(page) >= 0" />
     <router-view />
   </div>
 </template>
@@ -348,6 +349,9 @@ h6 {
   grid-template-columns: 100%;
   grid-template-rows: 70px auto;
   height: 100%;
+  .screen-xs-max({
+    grid-template-rows: 70px 50px auto;
+  });
   &.home {
     > header {
       &.compact {
@@ -410,6 +414,21 @@ h6 {
       .screen-xs-max({
         display: none;
       });
+    }
+  }
+  > .search {
+    display: block;
+    grid-row-start: 2;
+    padding: 9px 20px;
+    color: #fff;
+    background-color: #333;
+    .screen-sm-min({
+      display: none;
+    });
+    > form {
+      input {
+        color: #fff;
+      }
     }
   }
   svg {
@@ -505,6 +524,9 @@ h6 {
   grid-row-start: 2;
   grid-column-start: 1;
   grid-template-columns: 100%;
+  .screen-xs-max({
+    grid-row-start: 3;
+  });
 }
 
 .nav-tabs {

@@ -2,7 +2,7 @@
   <div class="search">
     <form>
       <font-awesome-icon :icon="['fal', 'search']" />
-      <input type="text" name="search" placeholder="start typing..." />
+      <input type="text" name="search" v-model="search" :placeholder="placeholder" @focus="placeholder = 'start typing...'" @blur="placeholder = 'search'" autocomplete="off" />
     </form>
   </div>
 </template>
@@ -10,7 +10,25 @@
 <script>
 export default {
   name: 'search',
-  props: {}
+  props: {},
+  data: function(){
+    return {
+      search: this.$store.state.search,
+      placeholder: 'search'
+    };
+  },
+  watch: {
+    search: function(search){
+      this.$store.dispatch('searchChanged', this.search);
+      if(this.search != this.$route.query.search) this.$router.replace({query: {search: this.search ? this.search : undefined}});
+    }
+  },
+  mounted: function(){
+    if(this.$route.query.search){
+      this.$store.dispatch('searchChanged', this.$route.query.search);
+      this.search = this.$route.query.search;
+    }
+  }
 }
 </script>
 
@@ -22,9 +40,6 @@ export default {
     position: relative;
     display: inline-block;
     font-size: 1.6em;
-    .screen-xxs-max({
-      display: none;
-    });
     > svg {
       position: relative;
       font-size: 0.8em;

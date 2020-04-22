@@ -14,6 +14,7 @@ export default new Vuex.Store({
     selectedRecipe: null,
     recipes: null,
     page: '',
+    search: '',
     scrolledDown: false,
     userMessage: {
       text: '',
@@ -44,6 +45,9 @@ export default new Vuex.Store({
     },
     setPage: function(state, page){
       state.page = page;
+    },
+    setSearch: function(state, search){
+      state.search = search;
     },
     setScrolledDown: function(state, scrolledDown){
       state.scrolledDown = scrolledDown;
@@ -88,6 +92,9 @@ export default new Vuex.Store({
     },
     routeChanged: function({commit}, pages){
       commit('setPage', pages[1]);
+    },
+    searchChanged: function({commit}, search){
+      commit('setSearch', search);
     },
     updateScroll: function({commit}, event){
       var scrolledDown = event.srcElement.scrollingElement.scrollTop > 50;

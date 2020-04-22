@@ -1,10 +1,17 @@
 <template>
   <div class="recipe-masonry">
     <div class="grid-layout">
-      <div class="grid-item" ref="recipes" v-bind:class="{'span-2': recipe.details.tags.indexOf('2x') >= 0, 'span-3': recipe.details.tags.indexOf('3x') >= 0}" v-for="(recipe, id) in recipes" v-bind:key="id" :style="recipe.details.imageStyle" @click="showRecipe(id)">
+      <div class="grid-item"
+          ref="recipes"
+          :class="{'span-2': recipe.details.tags.indexOf('2x') >= 0, 'span-3': recipe.details.tags.indexOf('3x') >= 0}"
+          v-for="(recipe, id) in recipes"
+          :key="id"
+          :style="recipe.details.imageStyle"
+          @click="showRecipe(id)">
         <span class="name">{{recipe.details.name}}</span>
       </div>
     </div>
+    <p v-show="Object.keys(recipes).length === 0">No recipes match this search</p>
   </div>
 </template>
 
@@ -14,11 +21,25 @@ import Velocity from 'velocity-animate';
 export default {
   name: 'recipe-masonry',
   computed: {
+    search: function(){
+      return this.$store.state.search;
+    },
     recipe: function(){
       return this.$store.state.recipe;
     },
     recipes: function(){
-      return this.$store.state.recipes;
+      if(this.$store.state.recipes){
+        var filteredRecipes = {};
+        var ids = Object.keys(this.$store.state.recipes);
+        var filter = this.search && this.search.length > 2;
+        for(var i=0; i<ids.length; i++){
+          var recipe = this.$store.state.recipes[ids[i]];
+          if(recipe.details.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || !filter) filteredRecipes[ids[i]] = recipe;
+        }
+        return filteredRecipes;
+      }else{
+        return {};
+      }
     }
   },
   methods: {
@@ -29,6 +50,16 @@ export default {
       setTimeout(function(){
         if(id !== that.recipe) that.$router.push({ name: 'recipe', params: { recipe: id }});
       }, 150);
+    }
+  },
+  watch: {
+    recipes: function(recipes){
+      var recipes = this.$refs['recipes'];
+      if(recipes){
+        setTimeout(function(){
+          Velocity(recipes, { opacity: 1 }, { delay: 0, easing: 'easeInQuad' }, 150);
+        }, 150);
+      }
     }
   },
   mounted: function(){
@@ -88,5 +119,10 @@ export default {
       line-height: 1.2;
     }
   }
+}
+
+P {
+  text-align: center;
+  padding: 5%;
 }
 </style>
