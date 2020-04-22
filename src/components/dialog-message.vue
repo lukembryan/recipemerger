@@ -25,6 +25,7 @@ export default {
       this.$store.commit('setDialogMessage', { text: '', proceed: null });
     },
     cancel: function(){
+      if(this.message.cancel) this.message.cancel();
       this.$store.commit('setDialogMessage', { text: '', proceed: null });
     }
   },

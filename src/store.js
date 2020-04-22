@@ -21,7 +21,8 @@ export default new Vuex.Store({
     },
     dialogMessage: {
       text: '',
-      proceed: null
+      proceed: null,
+      cancel: null
     }
   },
   mutations: {

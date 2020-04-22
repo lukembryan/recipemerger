@@ -108,11 +108,6 @@ export default {
       var duration = timer.duration + parseInt(timer.timeAdded);
       var finishTime = moment(timer.started).add(duration, 'm');
       var secondsLeft = -moment().diff(finishTime, 'seconds');
-      if(secondsLeft === 0){
-        var audio = new Audio(require('./assets/alarm.mp3'));
-        audio.play();
-        timer.show = true;
-      }
       return secondsLeft;
     },
     showHoursMinutes: function(totalMinutes) {

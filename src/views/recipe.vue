@@ -51,7 +51,7 @@
               </tr>
               <tr v-for="(ingredient, index) in ingredients.list" v-bind:key="index">
                 <td class="quantity">{{ingredient.quantity}} {{ingredient.unit}}</td>
-                <td>{{ingredient.description}}</td>
+                <td>{{ingredient.description}} <strong v-if="ingredient.preparation">{{ingredient.preparation}}</strong></td>
               </tr>
             </tbody>
           </table>

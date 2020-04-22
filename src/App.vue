@@ -31,7 +31,7 @@
           </ul>
         </div>
       </div>
-      <div class="overlay" ref="overlay" @click="toggleMenu()"></div>
+      <div class="overlay" ref="overlay"></div>
     </header>
     <router-view />
   </div>
@@ -208,7 +208,7 @@ a, .link, button.btn.link {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgba(0, 0, 0, 0.8);
   opacity: 0;
   pointer-events: none;
   z-index: 0;
@@ -262,6 +262,10 @@ h6 {
   margin: 20px 0 15px;
 }
 
+.warning {
+  color: lighten(@red, 25%);
+}
+
 .btn {
   border-radius: 0;
   border-width: 3px;
@@ -295,6 +299,22 @@ h6 {
     &:hover, &:focus, &:active, &.active {
       color: lighten(@brown, 10%);
       background-color: lighten(@brown, 55%);
+    }
+  }
+  &.tertiary {
+    border: none;
+    color: #666;
+    background-color: transparent;
+    &:hover, &:focus, &:active, &.active {
+      color: lighten(#666, 10%);
+    }
+  }
+  &.link {
+    border: none;
+    color: @brown;
+    background-color: transparent;
+    &:hover, &:focus, &:active, &.active {
+      color: lighten(@brown, 10%);
     }
   }
   > svg {
