@@ -19,8 +19,8 @@ export default {
   },
   watch: {
     search: function(search){
-      this.$store.dispatch('searchChanged', this.search);
-      if(this.search != this.$route.query.search) this.$router.replace({query: {search: this.search ? this.search : undefined}});
+      this.$store.dispatch('searchChanged', search);
+      if(search != this.$route.query.search) this.$router.replace({query: {search: search ? search : undefined}});
     }
   },
   mounted: function(){

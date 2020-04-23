@@ -53,7 +53,7 @@ export default {
     }
   },
   watch: {
-    recipes: function(recipes){
+    recipes: function(){
       var recipes = this.$refs['recipes'];
       if(recipes){
         setTimeout(function(){

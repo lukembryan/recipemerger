@@ -349,9 +349,11 @@ h6 {
   grid-template-columns: 100%;
   grid-template-rows: 70px auto;
   height: 100%;
-  .screen-xs-max({
-    grid-template-rows: 70px 50px auto;
-  });
+  &.browse {
+    .screen-xs-max({
+      grid-template-rows: 70px 50px auto;
+    });
+  }
   &.home {
     > header {
       &.compact {

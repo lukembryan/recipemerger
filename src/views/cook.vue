@@ -19,7 +19,7 @@
 
     <div class="current-step" v-hammer:swipe="onSwipe">
       <!-- TIMER VIEW -->
-      <div class="step-elements" v-if="progress.timer.step !== null && progress.timer.show" ref="timer">
+      <div class="step-elements" v-if="timerShown" ref="timer">
         <div class="step-control prev shown">
           <button class="btn secondary" @click="progress.timer.show = false">
             <font-awesome-icon :icon="['fal', 'times']" />
@@ -46,21 +46,9 @@
         </form>
       </div>
       <!-- TIMER VIEW -->
-
-      <div class="countdown" :class="{'timer-container': !progress.timer.show, 'method-progress': progress.timer.show}" v-if="progress.timer.step !== null">
-        <timer :current-progress="progress" :mode="progress.timer.step !== null && progress.timer.show ? 'text' : 'button'" class="shown" />
-      </div>
-      <div class="method-progress" v-if="!progress.timer.show">
-        <div>{{progress.currentStep+1}} of {{selectedRecipe.steps.length}}</div>
-        <div class="key-guide">
-          <font-awesome-icon :icon="['fal', 'chevron-left']" />
-          <font-awesome-icon :icon="['fal', 'keyboard']" />
-          <font-awesome-icon :icon="['fal', 'chevron-right']" />
-        </div>
-      </div>
-
+      
       <!-- NORMAL STEP VIEW -->
-      <div class="step-elements" v-if="progress.timer.step === null || (progress.timer.step !== null && !progress.timer.show)" ref="recipe">
+      <div class="step-elements" v-if="stepShown" ref="recipe">
         <div class="step-control prev" v-bind:class="{'shown': progress.currentStep > 0}">
           <button class="btn secondary" @click="changeStep(-1);">
             <font-awesome-icon :icon="['fal', 'arrow-left']" />
@@ -89,6 +77,18 @@
         </div>
       </div>
       <!-- NORMAL STEP VIEW -->
+
+      <div class="countdown" :class="{'timer-container': !progress.timer.show, 'method-progress': progress.timer.show}" v-if="progress.timer.step !== null">
+        <timer :current-progress="progress" :mode="progress.timer.step !== null && progress.timer.show ? 'text' : 'button'" class="shown" />
+      </div>
+      <div class="method-progress" v-if="!progress.timer.show">
+        <div>{{progress.currentStep+1}} of {{selectedRecipe.steps.length}}</div>
+        <div class="key-guide">
+          <font-awesome-icon :icon="['fal', 'chevron-left']" />
+          <font-awesome-icon :icon="['fal', 'keyboard']" />
+          <font-awesome-icon :icon="['fal', 'chevron-right']" />
+        </div>
+      </div>
     </div>
 
     <button class="ingredients-btn btn link" @click="toggleIngredients($event)" :class="{'shown': selectedRecipe.steps[progress.currentStep].ingredientsUsed.length > 0 && !progress.timer.show}">
@@ -148,6 +148,12 @@ export default {
     },
     currentlyTiming: function(){
       return this.progress.timer.step === this.progress.currentStep;
+    },
+    timerShown: function(){
+      return this.progress.timer.step !== null && this.progress.timer.show;
+    },
+    stepShown: function(){
+      return this.progress.timer.step === null || (this.progress.timer.step !== null && !this.progress.timer.show);
     },
     showNext: function(){
       var notLast = this.progress.currentStep < this.selectedRecipe.steps.length - 1;
