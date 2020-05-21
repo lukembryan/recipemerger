@@ -56,7 +56,6 @@ export default {
   },
   data: function(){
     return {
-      dev: window.location.host == 'localhost:8080' ? true : false,
       showMenu: false,
       menu: [
         { label: 'browse', path: '/browse' },

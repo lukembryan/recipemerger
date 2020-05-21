@@ -14,70 +14,62 @@
         <font-awesome-icon :icon="['fal', 'utensils']" />
         <span>Serving at {{servingTime}}</span>
       </div>
-      <div class="image" v-bind:style="selectedRecipe.details.imageStyle"></div>
+      <div class="image" :style="selectedRecipe.details.imageStyle"></div>
+      <div v-if="dev && false" id="cook-control-testing">
+        <span :class="{'badge-dark': timerShown}" class="badge badge-pill">timerShown</span>
+        <span :class="{'badge-dark': stepShown}" class="badge badge-pill">stepShown</span>
+        <span :class="{'badge-dark': notFirstStep}" class="badge badge-pill">notFirstStep</span>
+        <span :class="{'badge-dark': mustFinishTimer}" class="badge badge-pill">mustFinishTimer</span>
+        <span :class="{'badge-dark': showServedButton}" class="badge badge-pill">showServedButton</span>
+        <span :class="{'badge-dark': showNextButton}" class="badge badge-pill">showNextButton</span>
+        <span :class="{'badge-dark': showBackToTimer}" class="badge badge-pill">showBackToTimer</span>
+        <span :class="{'badge-dark': showHideTimer}" class="badge badge-pill">showHideTimer</span>
+      </div>
     </div>
 
-    <div class="current-step" v-hammer:swipe="onSwipe">
-      <!-- TIMER VIEW -->
-      <div class="step-elements" v-if="timerShown" ref="timer">
-        <div class="step-control prev shown">
-          <button class="btn secondary" @click="progress.timer.show = false">
-            <font-awesome-icon :icon="['fal', 'times']" />
-          </button>
-        </div>
-        <div class="step-control next shown">
-          <button class="btn primary" @click="closeTimer()">
-            <font-awesome-icon :icon="['fal', 'check']" />
-          </button>
-        </div>
-        <div class="step-description">
-          <div v-bind:style="currentStepStyle(null)">{{selectedRecipe.steps[progress.timer.step].description}}</div>
-        </div>
-        <form class="info adjust-timer">
-          <div>Adjust timer</div>
-          <div class="controls">
-            <div class="time">
-              <font-awesome-icon :icon="['fal', 'minus']" class="link" @click="adjustTimer(-1)" />
-              <span>{{selectedRecipe.steps[progress.timer.step].duration + progress.timer.timeAdded}}</span>
-              <span style="font-size: 0.8em;"> min{{selectedRecipe.steps[progress.timer.step].duration + progress.timer.timeAdded === 1 ? '' : 's'}}</span>
-              <font-awesome-icon :icon="['fal', 'plus']" class="link" @click="adjustTimer(1)" />
-            </div>
-          </div>
-        </form>
+    <div class="current-step" ref="current-step" v-hammer:swipe="onSwipe">
+      <div class="step-control prev">
+        <button ref="hide-timer" class="btn secondary" @click="progress.timer.show = false">
+          <font-awesome-icon :icon="['fal', 'times']" />
+        </button>
+        <button ref="back-arrow" class="btn secondary" @click="changeStep(-1);">
+          <font-awesome-icon :icon="['fal', 'arrow-left']" />
+        </button>
       </div>
-      <!-- TIMER VIEW -->
-      
-      <!-- NORMAL STEP VIEW -->
-      <div class="step-elements" v-if="stepShown" ref="recipe">
-        <div class="step-control prev" v-bind:class="{'shown': progress.currentStep > 0}">
-          <button class="btn secondary" @click="changeStep(-1);">
-            <font-awesome-icon :icon="['fal', 'arrow-left']" />
-          </button>
+      <div class="step-control next">
+        <button ref="close-timer" class="btn primary" @click="closeTimer()">
+          <font-awesome-icon :icon="['fal', 'check']" />
+        </button>
+        <button ref="forward-arrow" class="btn primary" @click="changeStep(1);">
+          <font-awesome-icon :icon="['fal', 'arrow-right']" v-if="!selectedRecipe.steps[progress.currentStep].parallel || currentlyTiming" />
+          <font-awesome-icon :icon="['fal', 'stopwatch']" v-if="selectedRecipe.steps[progress.currentStep].parallel && !currentlyTiming" />
+        </button>
+        <button ref="back-link" class="back btn link" @click="progress.timer.show = true;">
+          Back to step {{progress.timer.step + 1}}
+        </button>
+        <button ref="served-button" class="btn link" @click="finishCooking();">
+          <font-awesome-icon style="font-size: 2em; margin-bottom: 10px;" :icon="['fal', 'utensils']" /> Served
+        </button>
+      </div>
+      <div class="step-description">
+        <div :style="currentStepStyle(index)" v-for="(step, index) in selectedRecipe.steps" :key="index" v-if="stepShown">
+          {{step.description}}
         </div>
-        <div class="step-control next" v-bind:class="{'shown': showNext}">
-          <button class="btn primary" @click="changeStep(1);">
-            <font-awesome-icon :icon="['fal', 'arrow-right']" v-if="!selectedRecipe.steps[progress.currentStep].parallel || currentlyTiming" />
-            <font-awesome-icon :icon="['fal', 'stopwatch']" v-if="selectedRecipe.steps[progress.currentStep].parallel && !currentlyTiming" />
-          </button>
-        </div>
-        <div class="step-control next shown" v-if="showBackToTimer" @click="progress.timer.show = true;">
-          <button style="font-size: 1em; line-height: 1.2; text-align: center;" class="btn link">
-            Back to step {{progress.timer.step + 1}}
-          </button>
-        </div>
-        <div class="step-control next shown" v-if="progress.currentStep === selectedRecipe.steps.length - 1 && !showBackToTimer" @click="finishCooking();">
-          <button style="font-size: 1em; line-height: 1.2; text-align: center;" class="btn link">
-            <font-awesome-icon style="font-size: 2em; margin-bottom: 10px;" :icon="['fal', 'utensils']" /> Served
-          </button>
-        </div>
-        <div class="step-description">
-          <div v-bind:style="currentStepStyle(index)" v-for="(step, index) in selectedRecipe.steps" :key="index">
-            {{step.description}}
-          </div>
+        <div v-bind:style="currentStepStyle(null)" v-if="timerShown">
+          {{selectedRecipe.steps[progress.timer.step].description}}
         </div>
       </div>
-      <!-- NORMAL STEP VIEW -->
-
+      <form class="info adjust-timer" v-if="timerShown">
+        <div>Adjust timer</div>
+        <div class="controls">
+          <div class="time">
+            <font-awesome-icon :icon="['fal', 'minus']" class="link" @click="adjustTimer(-1)" />
+            <span>{{selectedRecipe.steps[progress.timer.step].duration + progress.timer.timeAdded}}</span>
+            <span style="font-size: 0.8em;"> min{{selectedRecipe.steps[progress.timer.step].duration + progress.timer.timeAdded === 1 ? '' : 's'}}</span>
+            <font-awesome-icon :icon="['fal', 'plus']" class="link" @click="adjustTimer(1)" />
+          </div>
+        </div>
+      </form>
       <div class="countdown" :class="{'timer-container': !progress.timer.show, 'method-progress': progress.timer.show}" v-if="progress.timer.step !== null">
         <timer :current-progress="progress" :mode="progress.timer.step !== null && progress.timer.show ? 'text' : 'button'" class="shown" />
       </div>
@@ -105,10 +97,10 @@
         <div class="ingredients">
           <h5>Used in this step:</h5>
           <div class="ingredient" v-for="(ingredient, index) in selectedRecipe.steps[progress.currentStep].ingredientsUsed" v-bind:key="index">
-            <div class="quantity">{{ingredient.quantity}} {{findIngredient(ingredient, selectedRecipe).unit}}</div>
+            <div class="name">{{findIngredient(ingredient, selectedRecipe).description}}</div>
             <div class="description">
-              <div>{{findIngredient(ingredient, selectedRecipe).description}}</div>
-              <div class="preparation" v-if="findIngredient(ingredient, selectedRecipe).preparation">
+              <div class="badge badge-light">{{ingredient.quantity}} {{findIngredient(ingredient, selectedRecipe).unit}}</div>
+              <div v-if="findIngredient(ingredient, selectedRecipe).preparation">
                 {{findIngredient(ingredient, selectedRecipe).preparation}}
               </div>
             </div>
@@ -139,7 +131,12 @@ export default {
       timeToAdd: 0,
       offsetStepDescription: null,
       checkTimeLeft: undefined,
-      watchingTimer: false
+      watchingTimer: false,
+      notFirstStep: false,
+      mustFinishTimer: false,
+      showServedButton: false,
+      showNextButton: false,
+      showHideTimer: false
     };
   },
   computed: {
@@ -156,9 +153,11 @@ export default {
       return this.progress.timer.step === null || (this.progress.timer.step !== null && !this.progress.timer.show);
     },
     showNext: function(){
+      if(!this.selectedRecipe) return false;
       var notLast = this.progress.currentStep < this.selectedRecipe.steps.length - 1;
-      var hasDependency = this.selectedRecipe.steps[this.progress.currentStep].dependsOn !== null && this.selectedRecipe.steps[this.progress.currentStep].dependsOn === this.progress.timer.step
-      return notLast && !hasDependency;
+      var step = this.selectedRecipe.steps[this.progress.currentStep];
+      var hasDependency = step.dependsOn !== null && step.dependsOn === this.progress.timer.step
+      return (notLast && !hasDependency) || step.parallel;
     },
     showBackToTimer: function(){
       var dependentStep = this.progress.timer.step !== null && this.selectedRecipe.steps[this.progress.currentStep].dependsOn === this.progress.timer.step;
@@ -169,21 +168,46 @@ export default {
     changeStep: function(direction){
       var that = this;
 
-      if(this.showBackToTimer && direction == 1){
-        this.progress.timer.show = true;
+      var notParallel = !that.selectedRecipe.steps[that.progress.currentStep].parallel;
+      var firstStep = that.progress.currentStep === 0;
+      var lastStep = that.progress.currentStep == that.selectedRecipe.steps.length-1;
+
+      if(that.showBackToTimer && direction == 1){
+        that.progress.timer.show = true;
         return;
       }
-
-      if(this.progress.currentStep == 0 && direction === -1) return;
-      if(this.progress.currentStep == this.selectedRecipe.steps.length-1 && direction == 1) return;
+      if(firstStep && direction === -1) return;
+      if(lastStep && direction == 1 && notParallel) return;
 
       if(direction === 0) return;
-      if(this.selectedRecipe.steps[this.progress.currentStep].parallel && direction === 1) this.setTimer();
-      this.progress.currentStep += direction;
 
-      setTimeout(function(){
-        that.showIngredients = false;
-      }, 150);
+      if(that.selectedRecipe.steps[that.progress.currentStep].parallel && direction === 1){
+        if(that.timerShown){
+          that.$store.commit('setDialogMessage', { text: 'Are you sure you are finished timing step ' + (that.progress.timer.step+1) + '?', proceed: function(){
+            that.setTimer();
+            continueStepChange();
+          }});
+        }else{
+          if(that.progress.timer.step !== null){
+            that.$store.commit('setUserMessage', { text: 'Make sure you are finished timing step ' + (that.progress.timer.step+1) + ' first.', type: 'text-warning'});
+            that.progress.timer.show = true;
+          }else{
+            that.setTimer();
+            continueStepChange();
+          }
+        }
+      }else{
+        continueStepChange();
+      }
+
+      function continueStepChange(){
+        if(!lastStep || (lastStep && notParallel)) that.progress.currentStep += direction;
+        else that.progress.timer.show = true;
+
+        setTimeout(function(){
+          that.showIngredients = false;
+        }, 150);
+      }
     },
     finishCooking: function(){
       console.log('finishCooking');
@@ -224,12 +248,6 @@ export default {
     adjustTimer: function(adjust){
       this.progress.timer.timeAdded = parseInt(this.progress.timer.timeAdded) + adjust;
     },
-    toggleTimer: function(show){
-      var recipe = this.$refs['recipe'];
-      var timer = this.$refs['timer'];
-      Velocity(recipe, { opacity: (show ? 1 : 0) }, { delay: (show ? 150 : 0), easing: 'easeInQuad' }, 150);
-      Velocity(timer, { opacity: (show ? 1 : 0) }, { delay: (show ? 0 : 150), easing: 'easeInQuad' }, 150);
-    },
     closeTimer: function(){
       var that = this;
 
@@ -243,7 +261,7 @@ export default {
           timeAdded: 0,
           show: false
         };
-      } });
+      }});
     },
     toggleIngredients: function(e){
       var ingredientsUsed = this.$refs['ingredients-used'];
@@ -288,11 +306,56 @@ export default {
     },
     progress: {
       handler: function (progress) {
+        var that = this;
         if(progress.timer.step !== null){
           localStorage.setItem('progress', JSON.stringify(progress));
-          this.calcServingTime(this.selectedRecipe, 'time', true);
+          this.calcServingTime(that.selectedRecipe, 'time', true);
         }else{
-          clearInterval(this.checkTimeLeft);
+          clearInterval(that.checkTimeLeft);
+        }
+
+        check();
+
+        function check(){
+          if(that.selectedRecipe){
+            animate();
+          }else{
+            setTimeout(function(){
+              check();
+            }, 100);
+          }
+        }
+
+        function animate(){
+          var backArrow = that.$refs['back-arrow'];
+
+          var forwardArrow = that.$refs['forward-arrow'];
+          var backLink = that.$refs['back-link'];
+          var servedButton = that.$refs['served-button'];
+
+          var hideTimer = that.$refs['hide-timer'];
+          var closeTimer = that.$refs['close-timer'];
+
+          var notFirstStep = that.notFirstStep;
+          var mustFinishTimer = that.mustFinishTimer;
+          var showServedButton = that.showServedButton;
+          var showNextButton = that.showNextButton;
+          var showHideTimer = that.showHideTimer;
+
+          that.notFirstStep = progress.currentStep > 0 && that.stepShown;
+          that.mustFinishTimer = that.showBackToTimer && that.stepShown;
+          that.showServedButton = that.stepShown && progress.currentStep === that.selectedRecipe.steps.length - 1 && !that.showBackToTimer && !that.selectedRecipe.steps[progress.currentStep].parallel;
+          that.showNextButton = that.showNext && that.stepShown;
+          that.showHideTimer = that.timerShown;
+
+          if(notFirstStep !== that.notFirstStep) Velocity(backArrow, { opacity: that.notFirstStep ? 1 : 0 }, { display: that.notFirstStep ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
+
+          if(showNextButton !== that.showNextButton) Velocity(forwardArrow, {opacity: that.showNextButton ? 1 : 0 }, { display: that.showNextButton ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
+          if(mustFinishTimer !== that.mustFinishTimer) Velocity(backLink, { opacity: that.mustFinishTimer ? 1 : 0 }, { display: that.mustFinishTimer ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
+          if(showServedButton !== that.showServedButton) Velocity(servedButton, { opacity: that.showServedButton ? 1 : 0 }, { display: that.showServedButton ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
+
+          if(showHideTimer !== that.showHideTimer) Velocity(hideTimer, { opacity: that.showHideTimer ? 1 : 0 }, { display: that.showHideTimer ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
+          Velocity(closeTimer, { opacity: that.timerShown ? 1 : 0 }, { display: that.timerShown ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
         }
       },
       deep: true
@@ -305,12 +368,10 @@ export default {
     var that = this;
 
     var checkForRecipe = setInterval(function(){
-      var recipe = that.$refs['recipe'];
-      var timer = that.$refs['timer'];
+      var currentStep = that.$refs['current-step'];
       var manager = that.$refs['manager'];
-      if((recipe || timer) && manager){
-        if(recipe) Velocity(recipe, { opacity: 1 }, { delay: 300, easing: 'easeInQuad' }, 150);
-        else Velocity(timer, { opacity: 1 }, { delay: 300, easing: 'easeInQuad' }, 150);
+      if(currentStep && manager){
+        Velocity(currentStep, { opacity: 1 }, { delay: 300, easing: 'easeInQuad' }, 150);
         Velocity(manager, { left: 0 }, { delay: 0, easing: 'easeInQuad' }, 150);
         clearInterval(checkForRecipe);
       }
@@ -327,6 +388,7 @@ export default {
   display: grid;
   grid-template-columns: 100%;
   grid-template-rows: 72px auto;
+  grid-row-start: 2;
   background-color: #efefef;
   overflow-y: hidden;
   overflow-x: hidden;
@@ -336,7 +398,7 @@ export default {
   });
   .manager {
     position: fixed;
-    left: 0;
+    left: -100px;
     right: 0;
     grid-row-start: 1;
     grid-column: 1/2;
@@ -346,7 +408,6 @@ export default {
     background-color: #333;
     height: 74px;
     padding: 0 20px;
-    left: -100%;
     box-shadow: #333 -3px 8px 15px;
     z-index: 1;
     .screen-xs-max({
@@ -371,7 +432,8 @@ export default {
       }
       > a {
         display: block;
-        margin: 20px 0 0 20px;
+        padding: 15px 20px;
+        background-color: #cccccc1c;
       }
     }
     > .recipe-name {
@@ -434,158 +496,158 @@ export default {
   .current-step {
     position: relative;
     grid-row-start: 1;
+    display: grid;
+    height: 100%;
+    grid-template-rows: 150px auto;
+    text-align: center;
+    align-items: center;
+    opacity: 0;
     .screen-xs-max({
       grid-row-start: 2;
+      grid-template-rows: 100px auto;
     });
-    > .step-elements {
-      display: grid;
-      position: relative;
-      height: 100%;
-      grid-template-rows: 150px auto;
-      text-align: center;
-      align-items: center;
-      .screen-xs-max({
-        grid-template-rows: 100px auto;
-      });
-      .adjust-timer {
-        align-self: end;
-        margin: 0 0 20px;
-        > .controls {
-          line-height: 1;
-          > .time {
-            margin: 0 20px;
-            font-size: 1.5em;
-            vertical-align: top;
-            .screen-sm-min({
-              font-size: 1.8em;
-            });
-            > svg {
-              margin: 0;
-              font-size: 1.5em;
-              vertical-align: text-bottom;
-              &.fa-minus {
-                margin-right: 15px;
-              }
-              &.fa-plus {
-                margin-left: 15px;
-              }
-              .screen-sm-min({
-                font-size: 3em;
-                width: 30px;
-                height: auto;
-              });
-            }
-            > .badge {
-              font-weight: 400;
-            }
-          }
-        }
-      }
-      .step-control {
-        grid-column-start: 1;
-        grid-row-start: 1;
-        align-self: start;
+    .adjust-timer {
+      align-self: end;
+      margin: 0 0 20px;
+      > .controls {
         line-height: 1;
-        opacity: 0;
-        pointer-events: none;
-        &.shown {
-          opacity: 1;
-          pointer-events: all;
-          > .btn {
-            pointer-events: all;
-            > svg {
-              opacity: 1;
-            }
-          }
-        }
-        > .btn {
-          height: 80px;
-          width: 80px;
-          font-size: 1.6em;
-          pointer-events: none;
+        > .time {
+          margin: 0 20px;
+          font-size: 1.5em;
+          vertical-align: top;
           .screen-sm-min({
-            height: 120px;
-            width: 120px;
-            font-size: 2.5em;
+            font-size: 1.8em;
           });
           > svg {
-            width: 1em;
-            opacity: 0;
-            margin-right: 0;
-            vertical-align: top;
-            transition: all ease-in-out 0.3s;
-          }
-        }
-        &.prev {
-          justify-self: start;
-          margin: -100% 100% 100% -100%;
-          transition: all ease-in-out 0.3s 0.3s;
-          &.shown {
             margin: 0;
-            transition: all ease-in-out 0.3s;
-          }
-          > .btn {
-            text-align: left;
-            padding: 0 0 0 30px;
-            border-radius: 0 0 100%;
-            border-width: 0 3px 3px 0;
-            .screen-xs-max({
-              padding: 0 0 0 20px;
-            });
-          }
-        }
-        &.next {
-          justify-self: end;
-          > .btn {
-            text-align: right;
-            padding: 0 30px 0 0;
-            border-radius: 0 0 0 100%;
-            border-width: 0 0 3px 3px;
-            .screen-xs-max({
-              padding: 0 20px 0 0;
-            });
-            &.link {
-              height: auto;
-              padding: 25px;
-              .screen-xs-max({
-                padding: 20px;
-                width: 120px;
-              });
+            font-size: 1.5em;
+            vertical-align: text-bottom;
+            &.fa-minus {
+              margin-right: 15px;
             }
+            &.fa-plus {
+              margin-left: 15px;
+            }
+            .screen-sm-min({
+              font-size: 3em;
+              width: 30px;
+              height: auto;
+            });
           }
-        }
-      }
-      .step-description {
-        font-weight: 100;
-        width: 100%;
-        height: 100%;
-        grid-column-start: 1;
-        grid-row-start: 2;
-        align-self: start;
-        .screen-tiny({ font-size: 10px; line-height: 1.2; });
-        .screen-xxs({ font-size: 11px; line-height: 1.2; });
-        .screen-xs({ font-size: 13px; });
-        .screen-sm({ font-size: 14px; });
-        .screen-md({ font-size: 16px; });
-        .screen-lg-min({ font-size: 19px; });
-        > div {
-          position: absolute;
-          width: 100%;
-          transition: all ease-in-out 0.3s;
-          .screen-tiny({ padding: 0 20px; });
-          .screen-xxs({ padding: 0 30px; });
-          .screen-xs({ padding: 0 40px; });
-          .screen-sm({ padding: 0 50px; });
-          .screen-md({ padding: 0 100px; });
-          .screen-lg-min({ padding: 0 15%; });
+          > .badge {
+            font-weight: 400;
+          }
         }
       }
     }
+    .step-control {
+      grid-column-start: 1;
+      grid-row-start: 1;
+      align-self: start;
+      line-height: 1;
+      > .btn {
+        height: 80px;
+        width: 80px;
+        font-size: 1.6em;
+        opacity: 0;
+        display: none;
+        position: absolute;
+        top: 0;
+        .screen-sm-min({
+          height: 120px;
+          width: 120px;
+          font-size: 2.5em;
+        });
+        > svg {
+          width: 1em;
+          margin-right: 0;
+          vertical-align: top;
+        }
+      }
+      &.prev {
+        justify-self: start;
+        margin: 0;
+        > .btn {
+          left: 0;
+          text-align: left;
+          padding: 0 0 0 30px;
+          border-radius: 0 0 100%;
+          border-width: 0 3px 3px 0;
+          .screen-xs-max({
+            padding: 0 0 0 20px;
+          });
+        }
+      }
+      &.next {
+        justify-self: end;
+        margin: 0;
+        > .btn {
+          right: 0;
+          text-align: right;
+          padding: 0 30px 0 0;
+          border-radius: 0 0 0 100%;
+          border-width: 0 0 3px 3px;
+          .screen-xs-max({
+            padding: 0 20px 0 0;
+          });
+          &.back {
+            font-size: 1em;
+            line-height: 1.2;
+            text-align: center;
+          }
+          &.served-button {
+            font-size: 1em;
+            line-height: 1.2;
+            text-align: center;
+          }
+          &.link {
+            height: auto;
+            padding: 25px;
+            .screen-xs-max({
+              padding: 20px;
+              width: 120px;
+              font-size: 0.8em;
+              text-align: center;
+              width: 100px;
+            });
+          }
+        }
+      }
+    }
+    .step-description {
+      font-weight: 100;
+      width: 100%;
+      height: 100%;
+      grid-column-start: 1;
+      grid-row-start: 2;
+      align-self: start;
+      .screen-tiny({ font-size: 10px; line-height: 1.2; });
+      .screen-xxs({ font-size: 11px; line-height: 1.2; });
+      .screen-xs({ font-size: 13px; });
+      .screen-sm({ font-size: 14px; });
+      .screen-md({ font-size: 16px; });
+      .screen-lg-min({ font-size: 19px; });
+      > div {
+        position: absolute;
+        width: 100%;
+        transition: all ease-in-out 0.3s;
+        .screen-tiny({ padding: 0 20px; });
+        .screen-xxs({ padding: 0 30px; });
+        .screen-xs({ padding: 0 40px; });
+        .screen-sm({ padding: 0 50px; });
+        .screen-md({ padding: 0 100px; });
+        .screen-lg-min({ padding: 0 15%; });
+      }
+    }
     .timer-container {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
+      grid-row-start: 3;
+      align-self: end;
+      justify-self: end;
+      margin: 0 30px 30px 0;
       z-index: 1;
+      .screen-xs-max({
+        margin: 0 20px 20px 0;
+      });
       &.text {
         margin: 0;
       }
@@ -594,10 +656,12 @@ export default {
       }
     }
     .method-progress {
-      position: absolute;
-      top: 0;
-      width: 100%;
+      width: 120px;
       margin-top: 25px;
+      align-self: start;
+      justify-self: center;
+      grid-row-start: 1;
+      grid-column-start: 1;
       pointer-events: none;
       font-size: 1.8em;
       line-height: 1;
@@ -687,21 +751,27 @@ export default {
         grid-gap: 20px;
         background-color: #fff;
         padding: 20px;
+        .screen-xs({
+          grid-template-columns: 1fr 1fr 1fr;
+        });
         .screen-xxs-max({
           grid-template-columns: 1fr 1fr;
         });
-        .screen-xs({
-          grid-template-columns: 1fr 1fr 1fr;
+        .screen-tiny({
+          grid-template-columns: 1fr;
         });
         > h5 {
           grid-row: 1/2;
           grid-column: 1/6;
           margin-bottom: 0;
+          .screen-xs({
+            grid-column: 1/4;
+          });
           .screen-xxs-max({
             grid-column: 1/3;
           });
-          .screen-xs({
-            grid-column: 1/4;
+          .screen-tiny({
+            grid-column: 1/2;
           });
         }
         > .ingredient {
@@ -709,13 +779,13 @@ export default {
           height: 100%;
           border: 1px solid #ccc;
           text-align: center;
-          &:nth-child(2), &:nth-child(7) { .quantity {background-color: @purple; } }
-          &:nth-child(3), &:nth-child(8) { .quantity {background-color: @red; } }
-          &:nth-child(4), &:nth-child(9) { .quantity { background-color: @brown; } }
-          &:nth-child(5), &:nth-child(10) { .quantity {background-color: @yellow; } }
-          &:nth-child(6), &:nth-child(11) { .quantity {background-color: @green; } }
+          &:nth-child(2), &:nth-child(7) { .name {background-color: @purple; } }
+          &:nth-child(3), &:nth-child(8) { .name {background-color: @red; } }
+          &:nth-child(4), &:nth-child(9) { .name { background-color: @brown; } }
+          &:nth-child(5), &:nth-child(10) { .name {background-color: @yellow; } }
+          &:nth-child(6), &:nth-child(11) { .name {background-color: @green; } }
           > div {
-            &.quantity {
+            &.name {
               padding: 5px 10px;
               border-bottom: 2px solid #999;
               font-weight: 400;
@@ -725,17 +795,24 @@ export default {
               padding: 10px;
               font-size: 1em;
               line-height: 1.2;
-              > .preparation {
-                margin-top: 10px;
-                padding: 10px 15px;
-                background-color: #e7e7e7;
-                border: 1px solid #666
+              > .badge {
+                margin-bottom: 10px;
+                border-radius: 0;
               }
             }
           }
         }
       }
     }
+  }
+}
+
+#cook-control-testing {
+  padding: 15px;
+  text-align: center;
+  > span {
+    font-size: 0.8em;
+    font-weight: 400;
   }
 }
 </style>

@@ -5,6 +5,7 @@ import moment from 'moment';
 export default {
   data: function () {
     return {
+      dev: window.location.host == 'localhost:8080' ? true : false,
       servingTime: '',
       parallelTime: {},
       progress: {

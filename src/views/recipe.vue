@@ -110,7 +110,14 @@ export default {
 
       if(!progress || progress.id != this.recipe){
         this.$store.commit('setSelectedRecipe', null);
-        localStorage.setItem('progress', JSON.stringify({
+
+        var ingredientPrep = {};
+        for(var i=0; i < this.currentRecipe.ingredients.length; i++){
+          var component = this.currentRecipe.ingredients[i];
+          if(!ingredientPrep[component.component]) ingredientPrep[component.component] = [];
+        }
+
+        var newProgress = JSON.stringify({
           id: this.recipe,
           currentStep: 0,
           timer: {
@@ -119,8 +126,13 @@ export default {
             started: null,
             timeAdded: 0,
             show: false
-          }
-        }));
+          },
+          ingredientPrep: ingredientPrep
+        });
+
+        console.log('newProgress', newProgress);
+
+        localStorage.setItem('progress', newProgress);
       }
 
       var that = this;
@@ -200,9 +212,7 @@ export default {
   }
 }
 .image {
-  -webkit-box-shadow: inset 0 0 10px #ddd;
-  box-shadow: inset 0 0 70px #eee;
-  border: 1px solid #ddd;
+  border: 1px solid @red;
   grid-column-start: 2;
   grid-column-end: 3;
   max-width: 600px;

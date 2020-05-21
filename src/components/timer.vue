@@ -50,13 +50,20 @@ export default {
     countDown: function(){
       var that = this;
       that.alarm = new Audio(require('../assets/alarm.mp3'));
+
+      checkTimeLeft();
+
       that.checkTimeLeft = setInterval(function(){
+        checkTimeLeft();
+      }, 1000);
+
+      function checkTimeLeft(){
         if(that.currentProgress){
           var timeLeft = that.calcTimeLeft(that.currentProgress.timer);
           if(timeLeft === 0) that.timerAlarm();
           that.timeLeft = that.showHoursMinutesSeconds(timeLeft);
         }
-      }, 1000);
+      }
     },
     timerAlarm: function(){
       var that = this;
@@ -70,6 +77,7 @@ export default {
       that.$store.commit('setDialogMessage', {
         text: 'Timer has finished, add time?',
         proceed: function(){
+          console.log('add time');
           that.stopAlarm();
           var minutesSoFar = that.currentProgress.timer.duration + that.currentProgress.timer.timeAdded;
           var minutesSinceStart = moment().diff(that.currentProgress.timer.started, 'seconds')/60;
@@ -77,6 +85,7 @@ export default {
           that.currentProgress.timer.timeAdded = parseInt(that.currentProgress.timer.timeAdded) + adjustment;
         },
         cancel: function(){
+          console.log('cancel alarm');
           that.stopAlarm();
           that.currentProgress.timer = {
             step: null,
