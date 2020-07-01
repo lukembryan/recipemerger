@@ -13,7 +13,8 @@ import {
   faSyncAlt, faChevronLeft, faChevronUp,
   faChevronDown, faChevronRight, faHatChef,
   faKeyboard, faArrowUp, faArrowDown, faArrowLeft,
-  faArrowRight, faUtensils, faWatch, faStopwatch
+  faArrowRight, faUtensils, faWatch, faStopwatch,
+  faVial
 } from '@fortawesome/pro-light-svg-icons';
 
 library.add(
@@ -23,7 +24,8 @@ library.add(
   faSyncAlt, faChevronLeft, faChevronUp,
   faChevronDown, faChevronRight, faHatChef,
   faKeyboard, faArrowUp, faArrowDown, faArrowLeft,
-  faArrowRight, faUtensils, faWatch, faStopwatch
+  faArrowRight, faUtensils, faWatch, faStopwatch,
+  faVial
 );
 
 import { VueHammer } from 'vue2-hammer';

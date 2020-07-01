@@ -1,7 +1,7 @@
 <template>
   <div class="user-message" v-if="message.text.length > 0">
-    <font-awesome-icon :icon="['fal', icon]" v-bind:class="message.type" />
-    <div class="message">{{message.text}}</div>
+    <font-awesome-icon :icon="['fal', icon]" v-bind:class="message.type" v-if="message.type != 'empty'" />
+    <div class="message" v-if="message.type != 'empty'">{{message.text}}</div>
     <button class="btn primary" v-if="['text-warning', 'text-danger'].indexOf(message.type) >= 0" @click="closeMessage()">OK</button>
   </div>
 </template>

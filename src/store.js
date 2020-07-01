@@ -13,6 +13,18 @@ export default new Vuex.Store({
     currentRecipe: null,
     selectedRecipe: null,
     recipes: null,
+    progress: {
+      id: null,
+      currentStep: 0,
+      timer: {
+        step: null,
+        duration: 0,
+        started: null,
+        timeAdded: 0,
+        show: false
+      }
+    },
+    servingTimePrint: '',
     page: '',
     search: '',
     scrolledDown: false,
@@ -43,6 +55,9 @@ export default new Vuex.Store({
     setRecipes: function(state, recipes){
       state.recipes = recipes;
     },
+    setServingTimePrint: function(state, servingTime){
+      state.servingTimePrint = servingTime;
+    },
     setPage: function(state, page){
       state.page = page;
     },
@@ -60,6 +75,9 @@ export default new Vuex.Store({
     },
     setSelectedRecipe: function(state, selectedRecipe){
       state.selectedRecipe = selectedRecipe;
+    },
+    setProgress: function(state, progress){
+      state.progress = progress;
     }
   },
   actions: {
@@ -102,15 +120,18 @@ export default new Vuex.Store({
     },
     loadRecipes: function({commit}){
       var recipes = {};
+      //commit('setUserMessage', { text: ' ', type: 'empty' });
       fb.recipes.get().then(function(querySnapshot) {
         querySnapshot.forEach(function(doc) {
           recipes[doc.id] = doc.data();
           mixins.methods.getImage(recipes[doc.id]);
         });
         commit('setRecipes', recipes);
+        //commit('setUserMessage', { text: '', type: '' });
       }).catch(function(error) {
         console.log(error);
         commit('setUserMessage', { text: 'issue loading recipes', type: 'text-danger' });
+        //commit('setUserMessage', { text: '', type: '' });
       });
     },
     saveRecipe: function({state, commit}, component){

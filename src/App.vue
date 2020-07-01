@@ -11,7 +11,7 @@
     </div>
     <user-message />
     <dialog-message />
-    <header v-bind:class="{'compact': scrolledDown || page == 'cook'}" v-if="page != 'home'">
+    <header v-bind:class="{'compact': scrolledDown || page == 'cook', 'menu-shown': showMenu}" v-if="page != 'home'">
       <h1 v-if="page != 'home'">
         <img src="/img/logo.png" />
         <router-link to="/" @click="toggleMenu()">sizzle</router-link>
@@ -222,7 +222,7 @@ h1 {
   font-size: 3em;
   font-family: 'Share', cursive;
   transition: all ease-in-out 0.3s;
-  z-index: 0;
+  z-index: 2;
   .screen-xs-max({
     width: 170px;
   });
@@ -322,6 +322,10 @@ h6 {
   }
 }
 
+.alert {
+  border-radius: 0;
+}
+
 .svg-inline--fa {
   margin: 0px 0 -1px 3px;
 }
@@ -383,6 +387,9 @@ h6 {
     .screen-xs-max({
       grid-template-columns: auto 30px;
     });
+    &.menu-shown {
+      z-index: 3;
+    }
     &.compact {
       padding: 10px 20px;
       height: 50px;

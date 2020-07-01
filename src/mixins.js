@@ -7,18 +7,9 @@ export default {
     return {
       dev: window.location.host == 'localhost:8080' ? true : false,
       servingTime: '',
-      parallelTime: {},
-      progress: {
-        id: null,
-        currentStep: 0,
-        timer: {
-          step: null,
-          duration: 0,
-          started: null,
-          timeAdded: 0,
-          show: false
-        }
-      }
+      recipeDuration: 0,
+      stepOffsets: {},
+      parallelTime: {}
     }
   },
   computed: {
@@ -30,6 +21,15 @@ export default {
     },
     recipe: function(){
       return this.$store.state.recipe;
+    },
+    progress: function(){
+      return this.$store.state.progress;
+    },
+    servingTimePrint: function(){
+      return this.$store.state.servingTimePrint;
+    },
+    currentlyTiming: function(){
+      return this.progress.timer.step === this.progress.currentStep;
     }
   },
   methods: {
@@ -54,18 +54,24 @@ export default {
       return foundIngredient;
     },
     calcServingTime: function(currentRecipe, mode, update){
+      var that = this;
       var recipeTime = 0;
-      this.parallelTime = {};
+      that.parallelTime = {};
+      that.stepOffsets = {};
 
       var included = !update;
+
+      var timeAdded = that.progress.timer.step !== null ? that.progress.timer.timeAdded : 0;
 
       if(!currentRecipe) return;
       for(var i=0; i<currentRecipe.steps.length; i++){
         var currentStep = currentRecipe.steps[i];
         var previousStep = currentRecipe.steps[i-1];
-        //var nextStep = currentRecipe.steps[i+1];
 
-        if(update) included = update && this.progress.currentStep <= i;
+        if(update) included = update && that.progress.currentStep <= i;
+
+        that.parallelTime[i] = 0;
+        that.stepOffsets[i] = 0;
 
         // LOGGING
         /*
@@ -81,29 +87,51 @@ export default {
         */
         // LOGGING
 
+        if(i === that.progress.timer.step) that.parallelTime[i] += timeAdded ? timeAdded : 0; // add parallel time for use
+
         if(currentStep.parallel){
           // current step has parallel component
 
-          this.parallelTime[i] = parseInt(currentStep.duration); // add parallel time for use
+          that.parallelTime[i] += parseInt(currentStep.duration); // add parallel time for use
 
           if(previousStep && previousStep.parallel){
             // previous step has parallel time
-            if(currentStep.dependsOn !== null) this.parallelTime[currentStep.dependsOn] = 0; // remove parallel time of dependent step
-            if(included) recipeTime += this.useParallelTime(currentStep.setupDuration, i) + currentStep.duration;
+            if(currentStep.dependsOn !== null) that.parallelTime[currentStep.dependsOn] = 0; // remove parallel time of dependent step
+            if(included) addTime(i, that.useParallelTime(currentStep.setupDuration, i) + currentStep.duration);
           }else{
             // previous step doesn't have parallel time
-            if(included) recipeTime += currentStep.setupDuration + currentStep.duration; // add all step durations
+            if(included) addTime(i, currentStep.setupDuration + currentStep.duration);
           }
         }else{
           // current step doesn't have parallel component
-          if(currentStep.dependsOn !== null) this.parallelTime[currentStep.dependsOn] = 0; // remove parallel time of dependent step
-          if(included) recipeTime += this.useParallelTime(currentStep.duration, i); // use any available parallel time
+          if(currentStep.dependsOn !== null) that.parallelTime[currentStep.dependsOn] = 0; // remove parallel time of dependent step
+          if(included) addTime(i, that.useParallelTime(currentStep.duration, i));
         }
 
-        //console.log('recipeTime', recipeTime, 'parallelTime', this.parallelTime);
+        if(that.progress.timer.step !== null && i < that.progress.timer.step) that.stepOffsets[that.progress.timer.step] += timeAdded;
       }
 
-      this.servingTime = mode == 'time' ? moment().add(recipeTime, 'minutes').format('h:mm A') : recipeTime;
+      function addTime(stepIndex, time){
+        recipeTime += time;
+        that.stepOffsets[stepIndex] += recipeTime - time;
+        if(timeAdded && stepIndex > that.progress.timer.step) that.stepOffsets[stepIndex] += timeAdded ? timeAdded : 0;
+      }
+
+      //console.log('stepOffsets', that.stepOffsets);
+      //console.log('parallelTime', this.parallelTime);
+
+      recipeTime += timeAdded ? timeAdded : 0;
+
+      if(mode == 'time'){
+        console.log('recipeTime', recipeTime);
+        that.servingTime = moment().add(recipeTime, 'minutes').format('h:mm A');
+        this.$store.commit('setServingTimePrint', this.servingTime);
+      }else{
+        that.servingTime = recipeTime;
+      }
+      console.log('servingTime', that.servingTime, mode);
+
+      if(mode == 'duration') that.recipeDuration = recipeTime;
     },
     calcTimeLeft: function(timer){
       var duration = timer.duration + parseInt(timer.timeAdded);
@@ -120,6 +148,7 @@ export default {
       return time;
     },
     useParallelTime: function(duration, currentStep){
+      var that = this;
       duration = parseInt(duration);
       var parallelTimeUsed = 0;
       var parallelTime = this.parallelTime;
@@ -135,15 +164,18 @@ export default {
           }
 
           parallelTime[parallelStep] -= parallelTimeUsed;
+          that.stepOffsets[currentStep] = -parallelTime[parallelStep];
         }
       });
 
-        return duration - parallelTimeUsed; // duration to add to recipe time is what is left after parallel time used
-      },
+      this.stepOffsets[currentStep] -= parallelTimeUsed;
+
+      return duration - parallelTimeUsed; // duration to add to recipe time is what is left after parallel time used
+    },
     getProgress: function(){
       var progress = localStorage.getItem('progress');
       if(progress){
-        this.progress = JSON.parse(progress);
+        this.$store.commit('setProgress', JSON.parse(progress));
         this.$store.dispatch('loadSelectedRecipe', this.progress.id);
       }
     },

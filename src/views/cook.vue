@@ -1,21 +1,23 @@
 <template>
-  <div class="cook content" v-if="selectedRecipe">
+  <div class="cook content">
+    <recipe-test v-if="dev" />
+    <div class="loading" ref="loading"><font-awesome-icon :icon="['fal', 'utensils']" /></div>
     <div class="manager" ref="manager">
       <div class="side">
         <router-link :to="{ name: 'recipe', params: {recipe: progress.id}}" class="link">
           <font-awesome-icon :icon="['fal', 'chevron-left']" /> recipe details
         </router-link>
-        <h4>{{selectedRecipe.details.name}}</h4>
+        <h4 v-if="selectedRecipe">{{selectedRecipe.details.name}}</h4>
       </div>
-      <router-link :to="{ name: 'recipe', params: {recipe: progress.id}}" class="recipe-name link">
+      <router-link :to="{ name: 'recipe', params: {recipe: progress.id}}" class="recipe-name link" v-if="selectedRecipe">
         <font-awesome-icon :icon="['fal', 'chevron-left']" /> {{selectedRecipe.details.name}}
       </router-link>
       <div class="info serving-time" v-if="selectedRecipe">
         <font-awesome-icon :icon="['fal', 'utensils']" />
         <span>Serving at {{servingTime}}</span>
       </div>
-      <div class="image" :style="selectedRecipe.details.imageStyle"></div>
-      <div v-if="dev && false" id="cook-control-testing">
+      <div class="image" :style="selectedRecipe.details.imageStyle" v-if="selectedRecipe"></div>
+      <div v-if="dev" id="cook-control-testing">
         <span :class="{'badge-dark': timerShown}" class="badge badge-pill">timerShown</span>
         <span :class="{'badge-dark': stepShown}" class="badge badge-pill">stepShown</span>
         <span :class="{'badge-dark': notFirstStep}" class="badge badge-pill">notFirstStep</span>
@@ -26,7 +28,6 @@
         <span :class="{'badge-dark': showHideTimer}" class="badge badge-pill">showHideTimer</span>
       </div>
     </div>
-
     <div class="current-step" ref="current-step" v-hammer:swipe="onSwipe">
       <div class="step-control prev">
         <button ref="hide-timer" class="btn secondary" @click="progress.timer.show = false">
@@ -36,7 +37,7 @@
           <font-awesome-icon :icon="['fal', 'arrow-left']" />
         </button>
       </div>
-      <div class="step-control next">
+      <div class="step-control next" v-if="selectedRecipe">
         <button ref="close-timer" class="btn primary" @click="closeTimer()">
           <font-awesome-icon :icon="['fal', 'check']" />
         </button>
@@ -48,18 +49,18 @@
           Back to step {{progress.timer.step + 1}}
         </button>
         <button ref="served-button" class="btn link" @click="finishCooking();">
-          <font-awesome-icon style="font-size: 2em; margin-bottom: 10px;" :icon="['fal', 'utensils']" /> Served
+          <font-awesome-icon :icon="['fal', 'utensils']" />
         </button>
       </div>
-      <div class="step-description">
-        <div :style="currentStepStyle(index)" v-for="(step, index) in selectedRecipe.steps" :key="index" v-if="stepShown">
-          {{step.description}}
+      <div class="step-description" v-if="selectedRecipe">
+        <div :style="currentStepStyle(index)" v-for="(step, index) in selectedRecipe.steps" :key="index" ref="step-description">
+          {{step ? step.description : ''}}
         </div>
-        <div v-bind:style="currentStepStyle(null)" v-if="timerShown">
-          {{selectedRecipe.steps[progress.timer.step].description}}
+        <div :style="currentStepStyle(null)" ref="timer-description">
+          {{selectedRecipe.steps[progress.timer.step] ? selectedRecipe.steps[progress.timer.step].description : ''}}
         </div>
       </div>
-      <form class="info adjust-timer" v-if="timerShown">
+      <form class="info adjust-timer" v-if="timerShown && selectedRecipe">
         <div>Adjust timer</div>
         <div class="controls">
           <div class="time">
@@ -73,7 +74,7 @@
       <div class="countdown" :class="{'timer-container': !progress.timer.show, 'method-progress': progress.timer.show}" v-if="progress.timer.step !== null">
         <timer :current-progress="progress" :mode="progress.timer.step !== null && progress.timer.show ? 'text' : 'button'" class="shown" />
       </div>
-      <div class="method-progress" v-if="!progress.timer.show">
+      <div class="method-progress" v-if="!progress.timer.show && selectedRecipe">
         <div>{{progress.currentStep+1}} of {{selectedRecipe.steps.length}}</div>
         <div class="key-guide">
           <font-awesome-icon :icon="['fal', 'chevron-left']" />
@@ -83,14 +84,17 @@
       </div>
     </div>
 
-    <button class="ingredients-btn btn link" @click="toggleIngredients($event)" :class="{'shown': selectedRecipe.steps[progress.currentStep].ingredientsUsed.length > 0 && !progress.timer.show}">
+    <button class="ingredients-btn btn link"
+      v-if="selectedRecipe"
+      @click="toggleIngredients($event)"
+      :class="{'shown': selectedRecipe.steps[progress.currentStep].ingredientsUsed.length > 0 && !progress.timer.show}">
       <span class="count">{{selectedRecipe.steps[progress.currentStep].ingredientsUsed.length}} ingredient{{selectedRecipe.steps[progress.currentStep].ingredientsUsed.length === 1 ? '' : 's'}} used</span>
       <span class="no-count">ingredients</span>
       <span class="badge key-guide">
         <font-awesome-icon :icon="['fal', 'keyboard']" /> i
       </span>
     </button>
-    <div class="ingredients-used" ref="ingredients-used"
+    <div class="ingredients-used" ref="ingredients-used" v-if="selectedRecipe"
           v-bind:class="{'shown': showIngredients}"
           @click="toggleIngredients($event)">
       <div ref="ingredients-panel" class="ingredients-panel">
@@ -117,18 +121,21 @@ import moment from 'moment';
 import Velocity from 'velocity-animate';
 
 import timer from '@/components/timer.vue';
+import recipeTest from '@/components/recipe-test.vue';
 
 export default {
   name: 'cook',
   mixins: [mixins],
   components: {
-    timer
+    timer,
+    recipeTest
   },
   data: function(){
     return {
       moment: moment,
       showIngredients: false,
       timeToAdd: 0,
+      timeAdjusted: false,
       offsetStepDescription: null,
       checkTimeLeft: undefined,
       watchingTimer: false,
@@ -143,14 +150,13 @@ export default {
     selectedRecipe: function(){
       return this.$store.state.selectedRecipe;
     },
-    currentlyTiming: function(){
-      return this.progress.timer.step === this.progress.currentStep;
-    },
     timerShown: function(){
-      return this.progress.timer.step !== null && this.progress.timer.show;
+      var timerShown = this.progress.timer.step !== null && this.progress.timer.show;
+      return timerShown;
     },
     stepShown: function(){
-      return this.progress.timer.step === null || (this.progress.timer.step !== null && !this.progress.timer.show);
+      var stepShown = this.progress.timer.step === null || (this.progress.timer.step !== null && !this.progress.timer.show);
+      return stepShown;
     },
     showNext: function(){
       if(!this.selectedRecipe) return false;
@@ -160,8 +166,12 @@ export default {
       return (notLast && !hasDependency) || step.parallel;
     },
     showBackToTimer: function(){
-      var dependentStep = this.progress.timer.step !== null && this.selectedRecipe.steps[this.progress.currentStep].dependsOn === this.progress.timer.step;
-      return !this.showNext && dependentStep;
+      if(this.selectedRecipe){
+        var dependentStep = this.progress.timer.step !== null && this.selectedRecipe.steps[this.progress.currentStep].dependsOn === this.progress.timer.step;
+        return !this.showNext && dependentStep;
+      }else{
+        return false;
+      }
     }
   },
   methods: {
@@ -213,10 +223,12 @@ export default {
       console.log('finishCooking');
     },
     currentStepStyle: function(step){
-      var showingTimer = this.progress.timer.step !== null && this.progress.timer.show;
-      var offset = showingTimer ? 0 : step - this.progress.currentStep;
+      var currentStep = this.timerShown ? this.progress.timer.step : step;
+      var offset = this.timerShown ? 0 : step - this.progress.currentStep;
 
-      var currentStep = showingTimer ? this.progress.timer.step : step;
+      if(currentStep === null || !this.selectedRecipe) return {display: 'none'};
+      if(this.timerShown && step !== currentStep) return {display: 'none'};
+
       var characters = this.selectedRecipe.steps[currentStep].description.length;
       var size = 25;
 
@@ -232,6 +244,7 @@ export default {
       }
 
       return {
+        display: 'block',
         fontSize: size/10 + 'em',
         left: offset * 100 + '%',
       };
@@ -246,7 +259,9 @@ export default {
       };
     },
     adjustTimer: function(adjust){
-      this.progress.timer.timeAdded = parseInt(this.progress.timer.timeAdded) + adjust;
+      if(this.selectedRecipe.steps[this.progress.timer.step].duration < -this.progress.timer.timeAdded+2 && adjust == -1) return;
+      this.progress.timer.timeAdded += adjust;
+      this.timeAdjusted = true;
     },
     closeTimer: function(){
       var that = this;
@@ -302,22 +317,25 @@ export default {
   },
   watch: {
     selectedRecipe: function(selectedRecipe){
-      if(selectedRecipe) this.calcServingTime(selectedRecipe, 'time', true);
+      if(selectedRecipe){
+        this.calcServingTime(selectedRecipe, 'time', true);
+        var loading = this.$refs['loading'];
+        Velocity(loading, { opacity: 0 }, { display: 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
+      }
     },
     progress: {
       handler: function (progress) {
         var that = this;
-        if(progress.timer.step !== null){
-          localStorage.setItem('progress', JSON.stringify(progress));
-          this.calcServingTime(that.selectedRecipe, 'time', true);
-        }else{
-          clearInterval(that.checkTimeLeft);
-        }
+        localStorage.setItem('progress', JSON.stringify(progress));
+        that.$store.commit('setProgress', progress);
+
+        if(progress.timer.step === null) clearInterval(that.checkTimeLeft);
 
         check();
 
         function check(){
           if(that.selectedRecipe){
+            that.calcServingTime(that.selectedRecipe, 'time', true);
             animate();
           }else{
             setTimeout(function(){
@@ -341,6 +359,8 @@ export default {
           var showServedButton = that.showServedButton;
           var showNextButton = that.showNextButton;
           var showHideTimer = that.showHideTimer;
+          var timeAdjusted = that.clone(that.timeAdjusted);
+          that.timeAdjusted = false;
 
           that.notFirstStep = progress.currentStep > 0 && that.stepShown;
           that.mustFinishTimer = that.showBackToTimer && that.stepShown;
@@ -355,7 +375,8 @@ export default {
           if(showServedButton !== that.showServedButton) Velocity(servedButton, { opacity: that.showServedButton ? 1 : 0 }, { display: that.showServedButton ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
 
           if(showHideTimer !== that.showHideTimer) Velocity(hideTimer, { opacity: that.showHideTimer ? 1 : 0 }, { display: that.showHideTimer ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
-          Velocity(closeTimer, { opacity: that.timerShown ? 1 : 0 }, { display: that.timerShown ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
+          if(!timeAdjusted) Velocity(closeTimer, { opacity: that.timerShown ? 1 : 0 }, { display: that.timerShown ? 'block' : 'none' }, { delay: 0, easing: 'easeInQuad' }, 150);
+
         }
       },
       deep: true
@@ -493,6 +514,18 @@ export default {
       });
     }
   }
+  .loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    padding: 25%;
+    font-size: 5em;
+    background-color: #e7e7e7;
+    z-index: 2;
+  }
   .current-step {
     position: relative;
     grid-row-start: 1;
@@ -607,9 +640,13 @@ export default {
               padding: 20px;
               width: 120px;
               font-size: 0.8em;
-              text-align: center;
-              width: 100px;
             });
+            > svg {
+              font-size: 1.5em;
+              .screen-xs-max({
+                font-size: 2.2em;
+              });
+            }
           }
         }
       }
