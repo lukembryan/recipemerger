@@ -4,12 +4,12 @@
     <div class="loading" ref="loading"><font-awesome-icon :icon="['fal', 'utensils']" /></div>
     <div class="manager" ref="manager">
       <div class="side">
-        <router-link :to="{ name: 'recipe', params: {recipe: progress.id}}" class="link">
+        <router-link :to="{ name: 'recipe', params: {recipe: progress.id}}" class="link light">
           <font-awesome-icon :icon="['fal', 'chevron-left']" /> recipe details
         </router-link>
         <h4 v-if="selectedRecipe">{{selectedRecipe.details.name}}</h4>
       </div>
-      <router-link :to="{ name: 'recipe', params: {recipe: progress.id}}" class="recipe-name link" v-if="selectedRecipe">
+      <router-link :to="{ name: 'recipe', params: {recipe: progress.id}}" class="recipe-name link light" v-if="selectedRecipe">
         <font-awesome-icon :icon="['fal', 'chevron-left']" /> {{selectedRecipe.details.name}}
       </router-link>
       <div class="info serving-time" v-if="selectedRecipe">
@@ -84,7 +84,7 @@
       </div>
     </div>
 
-    <button class="ingredients-btn btn link"
+    <button class="ingredients-btn btn link light"
       v-if="selectedRecipe"
       @click="toggleIngredients($event)"
       :class="{'shown': selectedRecipe.steps[progress.currentStep].ingredientsUsed.length > 0 && !progress.timer.show}">
@@ -147,9 +147,6 @@ export default {
     };
   },
   computed: {
-    selectedRecipe: function(){
-      return this.$store.state.selectedRecipe;
-    },
     timerShown: function(){
       var timerShown = this.progress.timer.step !== null && this.progress.timer.show;
       return timerShown;
@@ -210,9 +207,15 @@ export default {
         continueStepChange();
       }
 
+      if(direction == 1){
+        if(!that.progress.stepHistory[that.progress.currentStep]) that.progress.stepHistory[that.progress.currentStep] = [];
+        that.progress.stepHistory[that.progress.currentStep].push(moment());
+      }
+
       function continueStepChange(){
         if(!lastStep || (lastStep && notParallel)) that.progress.currentStep += direction;
         else that.progress.timer.show = true;
+
 
         setTimeout(function(){
           that.showIngredients = false;
@@ -847,6 +850,11 @@ export default {
 #cook-control-testing {
   padding: 15px;
   text-align: center;
+  .screen-xs-max({
+    bottom: 20%;
+    position: fixed;
+    color: initial;
+  });
   > span {
     font-size: 0.8em;
     font-weight: 400;

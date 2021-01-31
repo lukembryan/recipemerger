@@ -166,12 +166,18 @@ pre {
 }
 
 a, .link, button.btn.link {
-  color: lighten(@brown, 10%);
+  color: lighten(@dark-link, 10%);
   cursor: pointer;
   font-weight: 400;
   &:hover, &:focus {
     text-decoration: none;
-    color: lighten(@brown, 20%);
+    color: lighten(@dark-link, 20%);
+  }
+  &.light {
+    color: lighten(@light-link, 10%);
+    &:hover, &:focus {
+      color: lighten(@light-link, 20%);
+    }
   }
   > svg {
     margin-right: 5px !important;
@@ -185,7 +191,7 @@ a, .link, button.btn.link {
     border: 1px solid;
   }
   &.badge-dark {
-    background-color: @green;
+    background-color: @badge-dark;
   }
   &.badge-pill {
     padding-right: .45em;
@@ -227,12 +233,14 @@ h1 {
     width: 170px;
   });
   > a {
-    color: lighten(@brown, 20%);
+    color: lighten(@dark-link, 20%);
   }
   > img {
     height: 100%;
     margin-right: 10px;
     transition: all ease-in-out 0.3s;
+    filter: hue-rotate(@hue-rotate);
+    -webkit-filter: hue-rotate(@hue-rotate);
   }
 }
 
@@ -284,21 +292,21 @@ h6 {
     pointer-events: none;
   }
   &.primary {
-    border: 3px solid @brown;
+    border: 3px solid @dark-link;
     color: #fff;
-    background-color: lighten(@brown, 10%);
+    background-color: lighten(@dark-link, 10%);
     &:hover, &:focus, &:active, &.active {
       color: #fff;
-      background-color: lighten(@brown, 20%);
+      background-color: lighten(@dark-link, 20%);
     }
   }
   &.secondary {
-    border: 3px solid lighten(@brown, 40%);
-    color: @brown;
+    border: 3px solid lighten(@dark-link, 40%);
+    color: @dark-link;
     background-color: #fff;
     &:hover, &:focus, &:active, &.active {
-      color: lighten(@brown, 10%);
-      background-color: lighten(@brown, 55%);
+      color: lighten(@dark-link, 10%);
+      background-color: lighten(@dark-link, 55%);
     }
   }
   &.tertiary {
@@ -311,10 +319,10 @@ h6 {
   }
   &.link {
     border: none;
-    color: @brown;
+    color: @dark-link;
     background-color: transparent;
     &:hover, &:focus, &:active, &.active {
-      color: lighten(@brown, 10%);
+      color: lighten(@dark-link, 10%);
     }
   }
   > svg {
@@ -380,7 +388,7 @@ h6 {
     right: 0;
     width: 100%;
     height: 70px;
-    border-bottom: 1px solid lighten(@brown, 30%);
+    border-bottom: 1px solid lighten(@dark-link, 30%);
     transition: all ease-in-out 0.3s;
     box-shadow: #333 0px -10px 15px;
     z-index: 2;
@@ -466,7 +474,7 @@ h6 {
           text-align: left;
           > a {
             color: initial;
-            background-color: lighten(@brown, 45%);
+            background-color: lighten(@dark-link, @link-bg-lightest);
             padding-left: 55px;
             &:hover {
               padding-left: 50px;

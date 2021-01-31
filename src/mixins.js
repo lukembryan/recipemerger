@@ -22,6 +22,9 @@ export default {
     recipe: function(){
       return this.$store.state.recipe;
     },
+    selectedRecipe: function(){
+      return this.$store.state.selectedRecipe;
+    },
     progress: function(){
       return this.$store.state.progress;
     },
@@ -113,23 +116,23 @@ export default {
 
       function addTime(stepIndex, time){
         recipeTime += time;
+        console.log(stepIndex+1, {recipeTime, time});
         that.stepOffsets[stepIndex] += recipeTime - time;
+        if(stepIndex > that.progress.currentStep) that.stepOffsets[stepIndex] += that.currentStepDelay;
         if(timeAdded && stepIndex > that.progress.timer.step) that.stepOffsets[stepIndex] += timeAdded ? timeAdded : 0;
       }
 
-      //console.log('stepOffsets', that.stepOffsets);
       //console.log('parallelTime', this.parallelTime);
 
       recipeTime += timeAdded ? timeAdded : 0;
+      //recipeTime += that.currentStepDelay;
 
       if(mode == 'time'){
-        console.log('recipeTime', recipeTime);
         that.servingTime = moment().add(recipeTime, 'minutes').format('h:mm A');
         this.$store.commit('setServingTimePrint', this.servingTime);
       }else{
         that.servingTime = recipeTime;
       }
-      console.log('servingTime', that.servingTime, mode);
 
       if(mode == 'duration') that.recipeDuration = recipeTime;
     },
@@ -138,6 +141,19 @@ export default {
       var finishTime = moment(timer.started).add(duration, 'm');
       var secondsLeft = -moment().diff(finishTime, 'seconds');
       return secondsLeft;
+    },
+    checkForDelay: function(){
+      if(this.selectedRecipe){
+        var currentStep = this.selectedRecipe.steps[this.progress.currentStep];
+        var currentStepHistory = this.progress.stepHistory[this.progress.currentStep];
+        var stepStartTime = currentStepHistory[currentStepHistory.length-1];
+        var lapsedTime = moment().diff(stepStartTime, 'seconds')/60;
+        if(lapsedTime > 1) lapsedTime = parseInt(lapsedTime)+1;
+        else lapsedTime = parseInt(lapsedTime);
+        var timeLeft = currentStep.duration - lapsedTime;
+        var currentStepDelay = timeLeft < 0 ? -timeLeft : 0;
+        this.$store.commit('setCurrentStepDelay', currentStepDelay);
+      }
     },
     showHoursMinutes: function(totalMinutes) {
       var hours = Math.floor(totalMinutes / 60);
@@ -163,7 +179,8 @@ export default {
             parallelTimeUsed = parallelTime[parallelStep];
           }
 
-          parallelTime[parallelStep] -= parallelTimeUsed;
+          //parallelTime[parallelStep] -= parallelTimeUsed;
+          parallelTime[parallelStep] = 0;
           that.stepOffsets[currentStep] = -parallelTime[parallelStep];
         }
       });
@@ -185,7 +202,11 @@ export default {
     }
   },
   created: function(){
+    var that = this;
     window.addEventListener('keydown', this.handleKeyPress);
     this.getProgress();
+    setInterval(function(){
+      that.checkForDelay();
+    }, 100);
   }
 };

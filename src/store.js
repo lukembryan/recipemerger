@@ -13,18 +13,9 @@ export default new Vuex.Store({
     currentRecipe: null,
     selectedRecipe: null,
     recipes: null,
-    progress: {
-      id: null,
-      currentStep: 0,
-      timer: {
-        step: null,
-        duration: 0,
-        started: null,
-        timeAdded: 0,
-        show: false
-      }
-    },
+    progress: {},
     servingTimePrint: '',
+    currentStepDelay: 0,
     page: '',
     search: '',
     scrolledDown: false,
@@ -57,6 +48,9 @@ export default new Vuex.Store({
     },
     setServingTimePrint: function(state, servingTime){
       state.servingTimePrint = servingTime;
+    },
+    setCurrentStepDelay: function(state, currentStepDelay){
+      state.currentStepDelay = currentStepDelay;
     },
     setPage: function(state, page){
       state.page = page;

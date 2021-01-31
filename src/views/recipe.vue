@@ -85,6 +85,7 @@
 
 <script>
 import mixins from '@/mixins.js';
+import moment from 'moment';
 import Velocity from 'velocity-animate';
 
 export default {
@@ -117,9 +118,10 @@ export default {
           if(!ingredientPrep[component.component]) ingredientPrep[component.component] = [];
         }
 
-        var newProgress = JSON.stringify({
+        var newProgress = {
           id: this.recipe,
           currentStep: 0,
+          stepHistory: {},
           timer: {
             step: null,
             duration: 0,
@@ -128,7 +130,12 @@ export default {
             show: false
           },
           ingredientPrep: ingredientPrep
-        });
+        };
+
+        newProgress.stepHistory[0] = [];
+        newProgress.stepHistory[0].push(moment());
+
+        newProgress = JSON.stringify(newProgress);
 
         console.log('newProgress', newProgress);
 

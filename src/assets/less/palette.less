@@ -1,5 +1,15 @@
 @brown: #BD7344;
 @red: #A8293C;
+@brown: #BD7344;
 @purple: #582E44;
 @green: #8E7A3D;
 @yellow: #D7B957;
+
+@dark-link: @purple;
+@light-link: lighten(@dark-link, 25%);
+
+@link-bg-lightest: if((@dark-link = @red),55%, if((@dark-link = @purple),70%, if((@dark-link = @green),55%, if((@dark-link = @yellow),35%, 45%))));
+
+@badge-dark: @red;
+
+@hue-rotate: if((@dark-link = @red),330deg, if((@dark-link = @purple),276deg, if((@dark-link = @green),43deg, if((@dark-link = @yellow),385deg, 0deg))));

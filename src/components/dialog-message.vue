@@ -2,7 +2,7 @@
   <div class="dialog-message" v-if="message.text.length > 0">
     <div class="message">{{message.text}}</div>
     <div class="buttons">
-      <button class="btn secondary" @click="cancel()">Cancel</button>
+      <button class="btn secondary" @click="cancel()">{{message.cancelText ? message.cancelText : 'Cancel'}}</button>
       <button class="btn primary" @click="proceed()">OK</button>
     </div>
   </div>

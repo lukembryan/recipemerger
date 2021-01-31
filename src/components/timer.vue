@@ -39,7 +39,7 @@ export default {
       return this.$store.state.selectedRecipe;
     },
     dependsOn: function(){
-      return this.currentProgress && this.selectedRecipe.steps[this.currentProgress.currentStep].dependsOn === this.currentProgress.timer.step;
+      return this.selectedRecipe && this.currentProgress && this.selectedRecipe.steps[this.currentProgress.currentStep].dependsOn === this.currentProgress.timer.step;
     },
     nowTiming: function(){
       return this.currentProgress && this.currentProgress.currentStep === this.currentProgress.timer.step;
@@ -84,6 +84,7 @@ export default {
           var adjustment = Math.ceil(minutesSinceStart - minutesSoFar) + 1;
           that.currentProgress.timer.timeAdded = parseInt(that.currentProgress.timer.timeAdded) + adjustment;
         },
+        cancelText: 'no, I\'m done',
         cancel: function(){
           console.log('cancel alarm');
           that.stopAlarm();

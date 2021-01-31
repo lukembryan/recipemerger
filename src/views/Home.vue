@@ -112,7 +112,7 @@ export default {
       margin: 0 0 40px;
       width: 100%;
       line-height: 1;
-      color: lighten(@brown, 20%);
+      color: lighten(@dark-link, 20%);
       > img {
         height: 50px;
         margin-right: 15px;

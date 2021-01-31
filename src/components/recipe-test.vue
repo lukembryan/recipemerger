@@ -4,7 +4,7 @@
       <font-awesome-icon :icon="['fal', (show ? 'times' : 'vial')]" />
     </button>
     <div ref="panel">
-      <span class="float-right">ServingTime  <strong>{{servingTimePrint}}</strong></span>
+      <span class="float-right">Serving Time:  <strong>{{servingTimePrint}}</strong></span>
       <h4>{{selectedRecipe.details.name}}</h4>
       <ul class="nav nav-tabs">
         <li class="nav-item">
@@ -48,38 +48,43 @@
         </div>
       </div>
       <div class="timeline" v-if="active === 'timeline' && selectedRecipe">
-        <div class="progress-line" :style="progressLineStyle()">
-          <span class="badge badge-dark badge-sm">{{currentTime}}</span>
+        <div class="progress-line" :style="progressLineStyle">
+          <div class="badge badge-dark badge-sm">{{currentTime}}<br />-{{timeLeft}}</div>
         </div>
-        <div class="minutes total">
-          <span :style="'width:' + (1/recipeDuration)*100 + '%;'" v-for="min in recipeDuration" :key="min">
+        <div class="minutes total top">
+          <span :style="'width:' + (1/recipeDuration)*100 + '%;'" v-for="min in reversedMinutes" :key="min">
             <span style="position: absolute; top: 0;" class="number" v-if="showOnScale(min-1)">{{min-1}}</span>
           </span>
-          <span style="float: right; border: none;">
-            <span style="position: absolute; top: 0;" class="number">{{recipeDuration}}</span>
+          <span style="float: left; border: none;">
+            <span style="position: absolute; top: 0;" class="number last">{{recipeDuration}}</span>
           </span>
         </div>
         <div class="step" v-for="(step, index) in selectedRecipe.steps" :key="index" :class="{'current': page === 'cook' && progress.currentStep === index}">
-          <div class="setup-duration" :style="timelineStepStyle(step, index, 'setupDuration')" v-if="step.parallel" :title="'setup: ' + step.setupDuration">
+          <div class="setup-duration" :style="timelineStepStyle[index].setupDuration" v-if="step.parallel" :title="'setup: ' + step.setupDuration">
             {{step.setupDuration ? index+1 : ''}}
             <div class="minutes"><span :style="'width:' + (1/step.setupDuration)*100 + '%;'" v-for="min in step.setupDuration-1" :key="min"></span></div>
           </div>
-          <div class="duration" :style="timelineStepStyle(step, index, 'duration')" :title="'duration: ' + step.duration">
+          <div class="duration" :style="timelineStepStyle[index].duration" :title="'duration: ' + step.duration">
             {{!step.setupDuration ? index+1 : ''}}
             <div class="minutes"><span :style="'width:' + (1/(step.duration + (progress.timer.timeAdded < 0 && index === progress.timer.step ? progress.timer.timeAdded : 0))*100) + '%;'" v-show="progress.timer.step !== index || min < (step.duration + progress.timer.timeAdded)" v-for="min in step.duration-1" :key="min"></span></div>
           </div>
-          <div class="time-added" :style="timelineStepStyle(step, index, 'timeAdded')" :class="{'removed': progress.timer.timeAdded < 0}" :title="'time ' + (progress.timer.timeAdded >= 0 ? 'added' : 'removed') + ': ' + Math.abs(progress.timer.timeAdded)" v-if="progress.timer.step === index && progress.timer.timeAdded">
-            <div class="minutes"><span :style="'width:' + (1/Math.abs(progress.timer.timeAdded))*100 + '%;'" v-for="min in Math.abs(progress.timer.timeAdded-1)" :key="min"></span></div>
+          <div class="time-added" :style="timelineStepStyle[index].timeAdded" :class="{'removed': timeAdded(index) < 0}" :title="'time ' + (timeAdded(index) >= 0 ? 'added' : 'removed') + ': ' + Math.abs(timeAdded(index))" v-if="showTimeAdded(index)">
+            <div class="minutes"><span :style="'width:' + (1/Math.abs(timeAdded(index)))*100 + '%;'" v-for="min in Math.abs(timeAdded(index)-1)" :key="min"></span></div>
           </div>
         </div>
         <div class="minutes total">
-          <span :style="'width:' + (1/recipeDuration)*100 + '%;'" v-for="min in recipeDuration" :key="min">
+          <span :style="'width:' + (1/recipeDuration)*100 + '%;'" v-for="min in reversedMinutes" :key="min">
             <span style="position: absolute; bottom: -16px;" class="number" v-if="showOnScale(min-1)">{{min-1}}</span>
           </span>
-          <span style="float: right; border: none;">
-            <span style="position: absolute; bottom: -16px;" class="number">{{recipeDuration}}</span>
+          <span style="float: left; border: none;">
+            <span style="position: absolute; bottom: -16px;" class="number last">{{recipeDuration}}</span>
           </span>
         </div>
+        <p style="margin-top: 20px;">
+          <span class="badge badge-light badge-sm" v-for="(offset, step) in stepOffsets">
+            {{parseInt(step)+1}} ({{recipeDuration-offset}})
+          </span>
+        </p>
       </div>
       <div class="variables" v-if="active === 'variables' && selectedRecipe">
         <div>
@@ -106,7 +111,10 @@ export default {
     return {
       show: false,
       active: 'details',
-      currentTime: moment().format('h:mm')
+      currentTime: moment().format('h:mm'),
+      timeLeft: 0,
+      timelineStepStyle: {},
+      progressLineStyle: {}
     };
   },
   computed: {
@@ -121,22 +129,50 @@ export default {
       }else{
         return null;
       }
+    },
+    currentStepDelay: function(){
+      return this.$store.state.currentStepDelay;
+    },
+    reversedMinutes: function() {
+      var reversedMinutes = [];
+      for(var i = this.recipeDuration; i > 0; i--){
+        reversedMinutes.push(i);
+      }
+      return reversedMinutes;
     }
   },
   methods: {
     moment: moment,
-    timelineStepStyle: function(currentStep, stepIndex, component){
+    updateStyles: function(){
+      var that = this;
+      for(var i=0; i<that.selectedRecipe.steps.length; i++){
+        var currentStep = that.selectedRecipe.steps[i];
+        that.timelineStepStyleSetup(currentStep, i, 'duration');
+        if(currentStep.parallel) that.timelineStepStyleSetup(currentStep, i, 'setupDuration');
+        if(that.progress.timer.step === i) that.timelineStepStyleSetup(currentStep, i, 'timeAdded');
+      }
+      that.progressLineStyleSetup();
+    },
+    timelineStepStyleSetup: function(currentStep, stepIndex, component){
       var total = this.recipeDuration;
       var offset = this.clone(this.stepOffsets[stepIndex]);
       var timingStep = this.progress.timer.step !== null;
       var timeAdded = timingStep ? this.progress.timer.timeAdded : 0;
-      var width = component === 'timeAdded' ? Math.abs(timeAdded) : this.clone(currentStep[component]);
+      //if(stepIndex === this.progress.currentStep && this.currentStepDelay > 0) timeAdded = this.currentStepDelay;
+      var width = currentStep[component];
+
+      if(stepIndex === this.progress.currentStep+1) timeAdded += -this.currentStepDelay;
+
+      console.log('this.currentStepDelay', this.currentStepDelay, timeAdded);
 
       if(component === 'duration'){
         if(currentStep.parallel) offset = 0;
       }
 
-      if(component === 'timeAdded') offset = 0;
+      if(component === 'timeAdded'){
+        width = Math.abs(timeAdded);
+        offset = 0;
+      }
 
       if(component === 'duration' && timingStep && this.progress.timer.step === stepIndex){
         if(this.progress.timer.timeAdded < 0) width += timeAdded;
@@ -147,6 +183,7 @@ export default {
         marginLeft: (offset/total)*100 + '%'
       };
 
+      /*
       console.log({
         component: component,
         stepIndex: stepIndex,
@@ -158,18 +195,62 @@ export default {
         styles: styles,
         timer: this.progress.timer
       });
+      */
 
-      return styles;
+      if(!this.timelineStepStyle[stepIndex]) this.timelineStepStyle[stepIndex] = {};
+      this.timelineStepStyle[stepIndex][component] = styles;
     },
-    progressLineStyle: function(){
+    progressLineStyleSetup: function(){
       var total = this.recipeDuration;
-      var offset = this.clone(this.stepOffsets[this.progress.currentStep]);;
+      var offset = this.clone(this.stepOffsets[this.progress.currentStep]);
+
+      var currentStepHistory = this.progress.stepHistory[this.progress.currentStep];
+      var stepStartTime = currentStepHistory[currentStepHistory.length-1];
+      var lapsedTime = moment().diff(stepStartTime, 'seconds');
+
+      var currentStep = this.selectedRecipe.steps[this.progress.currentStep];
+      var timedStep = this.progress.timer.step !== null ? this.selectedRecipe.steps[this.progress.timer.step] : null;
+      var stepDuration = currentStep.duration*60;
+      var setupDuration = currentStep.setupDuration ? currentStep.setupDuration*60 : false;
+
+      var stepShouldBeDone = lapsedTime > stepDuration;
+      var setupShouldBeDone = setupDuration && lapsedTime > setupDuration;
+      if(stepShouldBeDone) lapsedTime = stepDuration;
+      if(setupShouldBeDone) lapsedTime = setupDuration;
+
+      var pause = stepShouldBeDone || setupShouldBeDone;
+
+      this.timeLeft = -moment().diff(moment(this.servingTimePrint, 'h:mm A'),'minutes');
+
+      var waitingForTimer = currentStep.dependsOn !== null && currentStep.dependsOn == this.progress.timer.step;
+
+      var timerLeft = this.calcTimeLeft(this.progress.timer)/60;
+      if(waitingForTimer){
+        var fullTimerDuration = this.progress.timer.duration + this.progress.timer.timeAdded + timedStep.setupDuration;
+        var timedSoFar = fullTimerDuration - timerLeft;
+        var timerOffset = this.clone(this.stepOffsets[currentStep.dependsOn]) + timedSoFar;
+        if(timedSoFar > fullTimerDuration) timerOffset = fullTimerDuration;
+        offset = timerOffset;
+      }else{
+        offset += lapsedTime/60;
+      }
 
       var styles = {
         marginLeft: (offset/total)*100 + '%'
       };
 
-      return styles;
+      this.progressLineStyle = styles;
+    },
+    timeAdded: function(stepIndex){
+      var timeAdded = 0;
+      if(stepIndex == this.progress.currentStep)  timeAdded = this.currentStepDelay;
+      else timeAdded = this.progress.timer.timeAdded;
+      return timeAdded;
+    },
+    showTimeAdded: function(stepIndex){
+      var addedToTimer = this.progress.timer.step === stepIndex && this.progress.timer.timeAdded;
+      var currentStepDelayed = this.progress.currentStep == stepIndex && this.currentStepDelay > 0;
+      return addedToTimer || currentStepDelayed;
     },
     showOnScale: function(min){
       var milestone = 1;
@@ -189,6 +270,17 @@ export default {
     var that = this;
     setInterval(function(){
       that.currentTime = moment().format('h:mm');
+      check();
+
+      function check(){
+        if(that.selectedRecipe){
+          that.updateStyles();
+        }else{
+          setTimeout(function(){
+            check();
+          }, 100);
+        }
+      }
     }, 1000);
   }
 }
@@ -241,9 +333,9 @@ export default {
     > .timeline {
       position: relative;
       padding: 0 3px;
-      margin: 50px 0 15px;
+      margin: 50px 35px 15px;
       .step {
-        margin: 5px 0;
+        margin: 1px 0;
         font-size: 0.8em;
         &.current {
           > div {
@@ -287,16 +379,41 @@ export default {
         height: 15px;
         &.total {
           position: relative;
+          bottom: 6px;
+          &.top {
+            > span {
+              vertical-align: top;
+              margin-top: 10px;
+              > .number {
+                &.last {
+                  margin: -3px 6px 3px -6px;
+                }
+              }
+            }
+          }
           > span {
             border-right: 1px solid black;
-            text-align: left;
+            text-align: right;
             &:first-child {
               border-left: 1px solid black;
+              &:nth-child(5n){
+                margin: 5px 0 -5px;
+              }
+            }
+            &:nth-last-child(5n-3){
+              height: 10px;
+            }
+            &:nth-child(5n){
+              height: 5px;
             }
             > .number {
-              margin: -3px 4px 0 -4px;
+              margin: -3px 0 0 -2px;
+              &.last {
+                margin: 0px 6px 0px -6px;
+              }
               font-size: 0.5em;
-              width: 10px;
+              width: auto;
+              text-align: right;
             }
           }
         }
@@ -304,21 +421,26 @@ export default {
           display: inline-block;
           height: 5px;
           border-right: 1px solid white;
+          &:nth-child(5n){
+            height: 10px;
+          }
         }
       }
       .progress-line {
         position: absolute;
-        top: -30px;
-        bottom: 5px;
+        top: -40px;
+        bottom: 52px;
         left: 0;
-        border-left: 1px solid;
+        border-left: 1px dashed @red;
         z-index: 1;
         > .badge {
           position: absolute;
-          top: -10px;
+          top: -3px;
           margin-left: -1px;
           border-radius: 0;
           font-size: 0.7em;
+          width: 30px;
+          padding: 1px;
         }
       }
     }
